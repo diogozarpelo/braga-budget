@@ -1,0 +1,24 @@
+# Ambiente virtual
+.venv/
+
+# Arquivos temporários do Python
+__pycache__/
+*.py[cod]
+
+# Configurações locais e segredos
+.env
+.vscode/
+
+# Banco e dados locais
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Backups locais
+backups/
+
+# Arquivos do Windows e macOS
+Thumbs.db
+Desktop.ini
+.DS_Store
