@@ -638,3 +638,54 @@ body.modal-open {
         gap: 8px;
     }
 }
+
+.section-toolbar > h3 {
+    margin: 0;
+}
+
+.summary-materials {
+    font-weight: bold;
+}
+
+.summary-discount {
+    color: #991b1b;
+}
+
+.summary-final {
+    margin: 10px -10px -10px;
+    padding: 16px 10px 10px;
+    border-bottom: 0;
+    color: #174a7e;
+    background: #eff6ff;
+    font-size: 18px;
+}
+
+.summary-final strong {
+    font-size: 24px;
+}
+
+.condition-texts {
+    display: grid;
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.condition-text {
+    padding: 16px;
+    border-left: 4px solid #cbd5e1;
+    border-radius: 6px;
+    background: #f8fafc;
+}
+
+.condition-text span {
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.condition-text p {
+    margin: 8px 0 0;
+    line-height: 1.5;
+    white-space: pre-line;
+}

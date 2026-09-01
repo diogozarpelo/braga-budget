@@ -1,0 +1,127 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Condições do orçamento | Vidraçaria Braga{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Orçamento de {{ quote["client_name"] }}</p>
+        <h2>Condições do orçamento</h2>
+        <p>Defina prazos, percentuais, pagamento e textos da proposta.</p>
+    </div>
+
+    <a
+        class="button button-secondary"
+        href="{{ url_for('main.quote_detail', quote_id=quote['id']) }}"
+    >
+        Voltar ao rascunho
+    </a>
+</section>
+
+<section class="card">
+    {% if error %}
+        <p class="alert alert-error">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" class="form-grid" autocomplete="off">
+        <label class="field">
+            <span>Validade em dias *</span>
+            <input
+                type="number"
+                name="validity_days"
+                value="{{ request.form.get('validity_days', quote['validity_days']) }}"
+                min="1"
+                step="1"
+                required
+                autofocus
+            >
+        </label>
+
+        <label class="field">
+            <span>Prazo de execução em dias *</span>
+            <input
+                type="number"
+                name="execution_days"
+                value="{{ request.form.get('execution_days', quote['execution_days']) }}"
+                min="1"
+                step="1"
+                required
+            >
+        </label>
+
+        <label class="field">
+            <span>Mão de obra sobre os materiais (%) *</span>
+            <input
+                type="text"
+                name="labor_percentage"
+                value="{{ request.form.get('labor_percentage', '%g'|format(quote['labor_percentage'])) }}"
+                inputmode="decimal"
+                required
+            >
+        </label>
+
+        <label class="field">
+            <span>Adicional de dificuldade (%) *</span>
+            <input
+                type="text"
+                name="difficulty_percentage"
+                value="{{ request.form.get('difficulty_percentage', '%g'|format(quote['difficulty_percentage'])) }}"
+                inputmode="decimal"
+                required
+            >
+        </label>
+
+        <label class="field">
+            <span>Desconto (%) *</span>
+            <input
+                type="text"
+                name="discount_percentage"
+                value="{{ request.form.get('discount_percentage', '%g'|format(quote['discount_percentage'])) }}"
+                inputmode="decimal"
+                required
+            >
+        </label>
+
+        <label class="field field-full">
+            <span>Forma e condições de pagamento</span>
+            <textarea
+                name="payment_terms"
+                rows="3"
+                placeholder="Ex.: 50% na aprovação e 50% na conclusão"
+            >{{ request.form.get('payment_terms', quote['payment_terms']) }}</textarea>
+        </label>
+
+        <label class="field field-full">
+            <span>Observações</span>
+            <textarea
+                name="notes"
+                rows="4"
+                placeholder="Informações adicionais para esta proposta"
+            >{{ request.form.get('notes', quote['notes']) }}</textarea>
+        </label>
+
+        <label class="field field-full">
+            <span>Texto de garantia</span>
+            <textarea
+                name="warranty_text"
+                rows="4"
+            >{{ request.form.get('warranty_text', quote['warranty_text']) }}</textarea>
+        </label>
+
+        <div class="info-box field-full">
+            A mão de obra será calculada sobre todos os materiais. Depois serão aplicados o adicional de dificuldade e o desconto.
+        </div>
+
+        <div class="form-actions field-full">
+            <a
+                class="button button-secondary"
+                href="{{ url_for('main.quote_detail', quote_id=quote['id']) }}"
+            >
+                Cancelar
+            </a>
+
+            <button type="submit">Salvar condições</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

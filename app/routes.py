@@ -383,6 +383,30 @@ def quote_detail(quote_id):
         glass_subtotal_cents
         + components_subtotal_cents
     )
+    labor_cents = percentage_of_cents(
+        materials_subtotal_cents,
+        quote["labor_percentage"],
+    )
+    subtotal_with_labor_cents = (
+        materials_subtotal_cents
+        + labor_cents
+    )
+    difficulty_cents = percentage_of_cents(
+        subtotal_with_labor_cents,
+        quote["difficulty_percentage"],
+    )
+    subtotal_before_discount_cents = (
+        subtotal_with_labor_cents
+        + difficulty_cents
+    )
+    discount_cents = percentage_of_cents(
+        subtotal_before_discount_cents,
+        quote["discount_percentage"],
+    )
+    final_total_cents = (
+        subtotal_before_discount_cents
+        - discount_cents
+    )
 
     return render_template(
         "quote_detail.html",
@@ -392,6 +416,10 @@ def quote_detail(quote_id):
         glass_subtotal_cents=glass_subtotal_cents,
         components_subtotal_cents=components_subtotal_cents,
         materials_subtotal_cents=materials_subtotal_cents,
+        labor_cents=labor_cents,
+        difficulty_cents=difficulty_cents,
+        discount_cents=discount_cents,
+        final_total_cents=final_total_cents,
     )
 
 
@@ -610,6 +638,124 @@ def new_quote_item_component(quote_id, item_id):
     return render_template(
         "new_quote_item_component.html",
         item=item,
+        error=error,
+    )
+
+
+
+def percentage_of_cents(base_cents, percentage):
+    amount = (
+        Decimal(base_cents)
+        * Decimal(str(percentage))
+        / Decimal("100")
+    )
+
+    return int(
+        amount.quantize(
+            Decimal("1"),
+            rounding=ROUND_HALF_UP,
+        )
+    )
+
+
+@main.route(
+    "/orcamentos/<int:quote_id>/condicoes",
+    methods=("GET", "POST"),
+)
+def edit_quote_conditions(quote_id):
+    db = get_db()
+    quote = db.execute(
+        """
+        SELECT
+            quotes.*,
+            clients.name AS client_name
+        FROM quotes
+        JOIN clients ON clients.id = quotes.client_id
+        WHERE quotes.id = ?
+        """,
+        (quote_id,),
+    ).fetchone()
+
+    if quote is None:
+        abort(404)
+
+    if quote["status"] != "draft":
+        abort(400)
+
+    error = None
+
+    if request.method == "POST":
+        payment_terms = request.form.get("payment_terms", "").strip()
+        notes = request.form.get("notes", "").strip()
+        warranty_text = request.form.get("warranty_text", "").strip()
+
+        try:
+            validity_days = int(
+                request.form.get("validity_days", "")
+            )
+            execution_days = int(
+                request.form.get("execution_days", "")
+            )
+            labor_percentage = parse_decimal(
+                request.form.get("labor_percentage", "")
+            )
+            difficulty_percentage = parse_decimal(
+                request.form.get("difficulty_percentage", "")
+            )
+            discount_percentage = parse_decimal(
+                request.form.get("discount_percentage", "")
+            )
+        except (ValueError, InvalidOperation):
+            error = "Preencha corretamente os prazos e percentuais."
+
+        if error is None and validity_days <= 0:
+            error = "A validade deve ser maior que zero."
+        elif error is None and execution_days <= 0:
+            error = "O prazo de execução deve ser maior que zero."
+        elif error is None and labor_percentage < 0:
+            error = "A mão de obra não pode ser negativa."
+        elif error is None and not 0 <= difficulty_percentage <= 100:
+            error = "O adicional de dificuldade deve ficar entre 0% e 100%."
+        elif error is None and not 0 <= discount_percentage <= 100:
+            error = "O desconto deve ficar entre 0% e 100%."
+
+        if error is None:
+            db.execute(
+                """
+                UPDATE quotes
+                SET
+                    validity_days = ?,
+                    execution_days = ?,
+                    payment_terms = ?,
+                    notes = ?,
+                    warranty_text = ?,
+                    labor_percentage = ?,
+                    difficulty_percentage = ?,
+                    discount_percentage = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+                """,
+                (
+                    validity_days,
+                    execution_days,
+                    payment_terms,
+                    notes,
+                    warranty_text,
+                    float(labor_percentage),
+                    float(difficulty_percentage),
+                    float(discount_percentage),
+                    quote_id,
+                ),
+            )
+            db.commit()
+
+            return redirect(
+                url_for("main.quote_detail", quote_id=quote_id)
+            )
+
+    return render_template(
+        "edit_quote_conditions.html",
+        quote=quote,
         error=error,
     )
 

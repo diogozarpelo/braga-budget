@@ -63,7 +63,18 @@
 </section>
 
 <section class="card">
-    <h3>Condições do orçamento</h3>
+    <div class="section-toolbar">
+        <h3>Condições do orçamento</h3>
+
+        {% if quote["status"] == "draft" %}
+            <a
+                class="button button-secondary"
+                href="{{ url_for('main.edit_quote_conditions', quote_id=quote['id']) }}"
+            >
+                Editar condições
+            </a>
+        {% endif %}
+    </div>
 
     <div class="detail-grid">
         <div class="detail-item">
@@ -88,7 +99,24 @@
 
         <div class="detail-item">
             <span>Desconto</span>
-            <strong>{{ quote["discount_percentage"]|int }}%</strong>
+            <strong>{{ "%g"|format(quote["discount_percentage"]) }}%</strong>
+        </div>
+    </div>
+
+    <div class="condition-texts">
+        <div class="condition-text">
+            <span>Forma e condições de pagamento</span>
+            <p>{{ quote["payment_terms"] or "Não informado" }}</p>
+        </div>
+
+        <div class="condition-text">
+            <span>Observações</span>
+            <p>{{ quote["notes"] or "Nenhuma observação" }}</p>
+        </div>
+
+        <div class="condition-text">
+            <span>Garantia</span>
+            <p>{{ quote["warranty_text"] or "Não informado" }}</p>
         </div>
     </div>
 </section>
@@ -229,9 +257,38 @@
                 <strong>{{ components_subtotal_cents|brl }}</strong>
             </div>
 
-            <div class="summary-row summary-total">
+            <div class="summary-row summary-materials">
                 <span>Total dos materiais</span>
                 <strong>{{ materials_subtotal_cents|brl }}</strong>
+            </div>
+
+            <div class="summary-row">
+                <span>
+                    Mão de obra
+                    ({{ "%g"|format(quote["labor_percentage"]) }}%)
+                </span>
+                <strong>{{ labor_cents|brl }}</strong>
+            </div>
+
+            <div class="summary-row">
+                <span>
+                    Adicional de dificuldade
+                    ({{ "%g"|format(quote["difficulty_percentage"]) }}%)
+                </span>
+                <strong>{{ difficulty_cents|brl }}</strong>
+            </div>
+
+            <div class="summary-row summary-discount">
+                <span>
+                    Desconto
+                    ({{ "%g"|format(quote["discount_percentage"]) }}%)
+                </span>
+                <strong>− {{ discount_cents|brl }}</strong>
+            </div>
+
+            <div class="summary-row summary-final">
+                <span>Total final</span>
+                <strong>{{ final_total_cents|brl }}</strong>
             </div>
         </div>
     {% else %}
@@ -239,6 +296,9 @@
     {% endif %}
 </section>
 {% endblock %}
+
+
+
 
 
 
