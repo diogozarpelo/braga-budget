@@ -1399,3 +1399,67 @@ body {
         justify-content: center;
     }
 }
+
+
+.home-recent-quotes {
+    margin-top: 24px;
+}
+
+.home-recent-quotes .section-toolbar {
+    margin-bottom: 20px;
+}
+
+.home-recent-quotes .section-heading h3 {
+    margin: 0;
+}
+
+.recent-quotes-list {
+    display: grid;
+    gap: 10px;
+}
+
+.recent-quote {
+    display: flex;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 9px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    color: #1f2937;
+    background: #f8fafc;
+    text-decoration: none;
+    transition:
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.recent-quote:hover {
+    border-color: #174a7e;
+    transform: translateY(-1px);
+}
+
+.recent-quote span {
+    display: block;
+    margin-bottom: 5px;
+    color: #174a7e;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.recent-quote strong {
+    display: block;
+}
+
+.recent-quote small {
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .recent-quote {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+}
