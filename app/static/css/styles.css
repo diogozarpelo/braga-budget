@@ -1,0 +1,46 @@
+﻿* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: #1f2937;
+    background: #f3f4f6;
+}
+
+.topbar {
+    padding: 20px 32px;
+    color: #ffffff;
+    background: #174a7e;
+}
+
+.topbar h1 {
+    margin: 0;
+}
+
+.container {
+    width: min(1100px, 92%);
+    margin: 40px auto;
+}
+
+.hero {
+    padding: 40px;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.eyebrow {
+    font-weight: bold;
+    color: #174a7e;
+}
+
+button {
+    padding: 12px 20px;
+    border: 0;
+    border-radius: 8px;
+    color: #ffffff;
+    background: #174a7e;
+    cursor: pointer;
+}
