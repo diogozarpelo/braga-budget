@@ -116,3 +116,66 @@ if (widthInput && heightInput && exactAreaOutput) {
     heightInput.addEventListener("input", updateExactArea);
     updateExactArea();
 }
+
+const removeModal = document.querySelector("#remove-modal");
+const removeModalTitle = document.querySelector("#remove-modal-title");
+const removeTargetName = document.querySelector("#remove-target-name");
+const removeModalMessage = document.querySelector("#remove-modal-message");
+const cancelRemovalButton = document.querySelector("#cancel-removal");
+const confirmRemovalButton = document.querySelector("#confirm-removal");
+const removeForms = document.querySelectorAll(".remove-form");
+
+let pendingRemovalForm = null;
+
+function closeRemovalModal() {
+    if (!removeModal) {
+        return;
+    }
+
+    removeModal.hidden = true;
+    document.body.classList.remove("modal-open");
+    pendingRemovalForm = null;
+}
+
+if (
+    removeModal &&
+    removeModalTitle &&
+    removeTargetName &&
+    removeModalMessage &&
+    cancelRemovalButton &&
+    confirmRemovalButton
+) {
+    removeForms.forEach((form) => {
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+
+            pendingRemovalForm = form;
+            removeModalTitle.textContent = form.dataset.confirmTitle;
+            removeTargetName.textContent = form.dataset.confirmName;
+            removeModalMessage.textContent = form.dataset.confirmMessage;
+            removeModal.hidden = false;
+            document.body.classList.add("modal-open");
+            cancelRemovalButton.focus();
+        });
+    });
+
+    cancelRemovalButton.addEventListener("click", closeRemovalModal);
+
+    confirmRemovalButton.addEventListener("click", () => {
+        if (pendingRemovalForm) {
+            pendingRemovalForm.submit();
+        }
+    });
+
+    removeModal.addEventListener("click", (event) => {
+        if (event.target === removeModal) {
+            closeRemovalModal();
+        }
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !removeModal.hidden) {
+            closeRemovalModal();
+        }
+    });
+}

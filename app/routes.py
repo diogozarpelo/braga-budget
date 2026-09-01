@@ -533,7 +533,7 @@ def new_quote_item(quote_id):
             db.commit()
 
             return redirect(
-                url_for("main.quote_detail", quote_id=quote_id)
+                url_for("main.quote_detail", quote_id=quote_id, _anchor="quote-items")
             )
 
     return render_template(
@@ -632,7 +632,7 @@ def new_quote_item_component(quote_id, item_id):
             db.commit()
 
             return redirect(
-                url_for("main.quote_detail", quote_id=quote_id)
+                url_for("main.quote_detail", quote_id=quote_id, _anchor="quote-items")
             )
 
     return render_template(
@@ -750,7 +750,11 @@ def edit_quote_conditions(quote_id):
             db.commit()
 
             return redirect(
-                url_for("main.quote_detail", quote_id=quote_id)
+                url_for(
+                    "main.quote_detail",
+                    quote_id=quote_id,
+                    _anchor="quote-conditions",
+                )
             )
 
     return render_template(
@@ -884,7 +888,7 @@ def edit_quote_item(quote_id, item_id):
             db.commit()
 
             return redirect(
-                url_for("main.quote_detail", quote_id=quote_id)
+                url_for("main.quote_detail", quote_id=quote_id, _anchor="quote-items")
             )
 
     charged_area_for_input = (
@@ -992,7 +996,7 @@ def edit_quote_item_component(
             db.commit()
 
             return redirect(
-                url_for("main.quote_detail", quote_id=quote_id)
+                url_for("main.quote_detail", quote_id=quote_id, _anchor="quote-items")
             )
 
     unit_price_for_input = (
@@ -1006,3 +1010,75 @@ def edit_quote_item_component(
         unit_price_for_input=unit_price_for_input,
         error=error,
     )
+
+
+@main.post(
+    "/orcamentos/<int:quote_id>/itens/<int:item_id>/remover"
+)
+def remove_quote_item(quote_id, item_id):
+    db = get_db()
+    result = db.execute(
+        """
+        DELETE FROM quote_items
+        WHERE
+            id = ?
+            AND quote_id = ?
+            AND EXISTS (
+                SELECT 1
+                FROM quotes
+                WHERE
+                    quotes.id = quote_items.quote_id
+                    AND quotes.status = 'draft'
+            )
+        """,
+        (item_id, quote_id),
+    )
+
+    if result.rowcount == 0:
+        abort(404)
+
+    db.commit()
+
+    return redirect(
+        url_for("main.quote_detail", quote_id=quote_id, _anchor="quote-items")
+    )
+
+
+@main.post(
+    "/orcamentos/<int:quote_id>/itens/<int:item_id>/componentes/<int:component_id>/remover"
+)
+def remove_quote_item_component(
+    quote_id,
+    item_id,
+    component_id,
+):
+    db = get_db()
+    result = db.execute(
+        """
+        DELETE FROM quote_item_components
+        WHERE
+            id = ?
+            AND quote_item_id = ?
+            AND EXISTS (
+                SELECT 1
+                FROM quote_items
+                JOIN quotes
+                    ON quotes.id = quote_items.quote_id
+                WHERE
+                    quote_items.id = quote_item_components.quote_item_id
+                    AND quote_items.quote_id = ?
+                    AND quotes.status = 'draft'
+            )
+        """,
+        (component_id, item_id, quote_id),
+    )
+
+    if result.rowcount == 0:
+        abort(404)
+
+    db.commit()
+
+    return redirect(
+        url_for("main.quote_detail", quote_id=quote_id, _anchor="quote-items")
+    )
+

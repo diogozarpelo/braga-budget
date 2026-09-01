@@ -62,7 +62,7 @@
     </div>
 </section>
 
-<section class="card">
+<section class="card" id="quote-conditions">
     <div class="section-toolbar">
         <h3>Condições do orçamento</h3>
 
@@ -121,7 +121,7 @@
     </div>
 </section>
 
-<section class="card">
+<section class="card" id="quote-items">
     <div class="section-toolbar">
         <div class="section-heading">
             <h3>Itens do orçamento</h3>
@@ -145,131 +145,180 @@
             "other": "Outro material"
         } %}
 
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Serviço</th>
-                        <th>Medidas</th>
-                        <th>Vidro</th>
-                        <th>Área cobrada</th>
-                        <th>Quantidade</th>
-                        <th>Total do vidro</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for item in items %}
-                        <tr>
-                            <td>
-                                <strong>{{ item["service_type"] }}</strong>
+        <div class="quote-items-list">
+            {% for item in items %}
+                <article class="quote-item-card">
+                    <div class="quote-item-main">
+                        <div class="quote-item-heading">
+                            <div>
+                                <span class="quote-item-number">Item {{ loop.index }}</span>
+                                <h4>{{ item["service_type"] }}</h4>
 
                                 {% if item["description"] %}
-                                    <span class="item-meta">
-                                        {{ item["description"] }}
-                                    </span>
+                                    <p>{{ item["description"] }}</p>
                                 {% endif %}
-                            </td>
+                            </div>
 
-                            <td>
-                                {{ item["width_mm"] }} × {{ item["height_mm"] }} mm
-                            </td>
+                            <div class="item-actions">
+                                <a
+                                    class="table-action"
+                                    href="{{ url_for(
+                                        'main.edit_quote_item',
+                                        quote_id=quote['id'],
+                                        item_id=item['id']
+                                    ) }}"
+                                >
+                                    Editar item
+                                </a>
 
-                            <td>
-                                <strong>{{ item["glass_type"] }}</strong>
-                                <span class="item-meta">
+                                <a
+                                    class="table-action"
+                                    href="{{ url_for(
+                                        'main.new_quote_item_component',
+                                        quote_id=quote['id'],
+                                        item_id=item['id']
+                                    ) }}"
+                                >
+                                    Adicionar componente
+                                </a>
+
+                                <form
+                                    method="post"
+                                    action="{{ url_for(
+                                        'main.remove_quote_item',
+                                        quote_id=quote['id'],
+                                        item_id=item['id']
+                                    ) }}"
+                                    class="inline-form remove-form"
+                                    data-confirm-title="Remover item?"
+                                    data-confirm-name="{{ item['service_type'] }}"
+                                    data-confirm-message="O item e todos os seus componentes serão removidos do rascunho."
+                                >
+                                    <button
+                                        class="table-action table-action-danger"
+                                        type="submit"
+                                    >
+                                        Remover item
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="quote-item-details">
+                            <div>
+                                <span>Medidas</span>
+                                <strong>
+                                    {{ item["width_mm"] }} × {{ item["height_mm"] }} mm
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>Vidro</span>
+                                <strong>
+                                    {{ item["glass_type"] }}
                                     {{ "%g"|format(item["thickness_mm"]) }} mm
-                                    {% if item["glass_color"] %}
-                                        · {{ item["glass_color"] }}
-                                    {% endif %}
+                                </strong>
+                                <small>
+                                    {{ item["glass_color"] or "Cor não informada" }}
                                     {% if item["finish"] %}
                                         · {{ item["finish"] }}
                                     {% endif %}
-                                </span>
-                            </td>
+                                </small>
+                            </div>
 
-                            <td>
-                                {{ "%.2f"|format(item["charged_area_m2"])|replace(".", ",") }} m²
-                            </td>
+                            <div>
+                                <span>Área cobrada por unidade</span>
+                                <strong>
+                                    {{ "%.2f"|format(item["charged_area_m2"])|replace(".", ",") }} m²
+                                </strong>
+                            </div>
 
-                            <td>{{ item["quantity"] }}</td>
+                            <div>
+                                <span>Quantidade</span>
+                                <strong>{{ item["quantity"] }}</strong>
+                            </div>
 
-                            <td>
+                            <div>
+                                <span>Total do vidro</span>
                                 <strong>{{ item["glass_total_cents"]|brl }}</strong>
-                            </td>
+                            </div>
+                        </div>
+                    </div>
 
-                            <td class="item-actions-cell"><div class="item-actions">
-                                    <a
-                                        class="table-action"
-                                        href="{{ url_for(
-                                            'main.edit_quote_item',
-                                            quote_id=quote['id'],
-                                            item_id=item['id']
-                                        ) }}"
-                                    >
-                                        Editar item
-                                    </a>
+                    <div class="item-components">
+                        <div class="item-components-heading">
+                            <div>
+                                <strong>Componentes deste item</strong>
+                                <span>Kits, acessórios e outros materiais vinculados</span>
+                            </div>
 
-                                    <a
-                                        class="table-action"
-                                        href="{{ url_for(
-                                            'main.new_quote_item_component',
-                                            quote_id=quote['id'],
-                                            item_id=item['id']
-                                        ) }}"
-                                    >
-                                        Adicionar componente
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
+                            <span class="component-count">
+                                {{ components_by_item[item["id"]]|length }}
+                            </span>
+                        </div>
 
                         {% if components_by_item[item["id"]] %}
-                            <tr class="components-row">
-                                <td colspan="7">
-                                    <div class="components-panel">
-                                        <strong>Kits e acessórios</strong>
+                            <div class="components-list">
+                                {% for component in components_by_item[item["id"]] %}
+                                    <div class="component-entry">
+                                        <div class="component-info">
+                                            <span class="component-category">
+                                                {{ category_labels[component["category"]] }}
+                                            </span>
+                                            <strong>{{ component["description"] }}</strong>
+                                        </div>
 
-                                        <div class="components-list">
-                                            {% for component in components_by_item[item["id"]] %}
-                                                <div class="component-entry">
-                                                    <div>
-                                                        <span class="component-category">
-                                                            {{ category_labels[component["category"]] }}
-                                                        </span>
-                                                        <strong>{{ component["description"] }}</strong>
-                                                    </div>
+                                        <div class="component-value-actions">
+                                            <span>
+                                                {{ component["quantity"] }}
+                                                × {{ component["unit_price_cents"]|brl }}
+                                                = <strong>{{ component["total_cents"]|brl }}</strong>
+                                            </span>
 
-                                                    <div class="component-value-actions">
-                                                        <span>
-                                                            {{ component["quantity"] }}
-                                                            × {{ component["unit_price_cents"]|brl }}
-                                                            = <strong>{{ component["total_cents"]|brl }}</strong>
-                                                        </span>
+                                            <a
+                                                class="component-edit"
+                                                href="{{ url_for(
+                                                    'main.edit_quote_item_component',
+                                                    quote_id=quote['id'],
+                                                    item_id=item['id'],
+                                                    component_id=component['id']
+                                                ) }}"
+                                            >
+                                                Editar
+                                            </a>
 
-                                                        <a
-                                                            class="component-edit"
-                                                            href="{{ url_for(
-                                                                'main.edit_quote_item_component',
-                                                                quote_id=quote['id'],
-                                                                item_id=item['id'],
-                                                                component_id=component['id']
-                                                            ) }}"
-                                                        >
-                                                            Editar
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            {% endfor %}
+                                            <form
+                                                method="post"
+                                                action="{{ url_for(
+                                                    'main.remove_quote_item_component',
+                                                    quote_id=quote['id'],
+                                                    item_id=item['id'],
+                                                    component_id=component['id']
+                                                ) }}"
+                                                class="inline-form remove-form"
+                                                data-confirm-title="Remover componente?"
+                                                data-confirm-name="{{ component['description'] }}"
+                                                data-confirm-message="O componente será removido deste item."
+                                            >
+                                                <button
+                                                    class="component-edit component-remove"
+                                                    type="submit"
+                                                >
+                                                    Remover
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
-                                </td>
-                            </tr>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="components-empty">
+                                Nenhum componente adicionado a este item.
+                            </p>
                         {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </div>
+                </article>
+            {% endfor %}
         </div>
 
         <div class="quote-summary">
@@ -321,14 +370,43 @@
         <p class="empty-state">Nenhum item adicionado ao orçamento ainda.</p>
     {% endif %}
 </section>
+<div class="modal-backdrop" id="remove-modal" hidden>
+    <section
+        class="confirmation-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="remove-modal-title"
+    >
+        <div class="modal-warning" aria-hidden="true">!</div>
+
+        <h3 id="remove-modal-title">Confirmar remoção</h3>
+
+        <p>
+            <strong id="remove-target-name"></strong>
+        </p>
+
+        <p class="modal-note" id="remove-modal-message"></p>
+
+        <div class="modal-actions">
+            <button
+                class="button button-secondary"
+                id="cancel-removal"
+                type="button"
+            >
+                Cancelar
+            </button>
+
+            <button
+                class="button button-danger"
+                id="confirm-removal"
+                type="button"
+            >
+                Remover
+            </button>
+        </div>
+    </section>
+</div>
 {% endblock %}
-
-
-
-
-
-
-
 
 
 
