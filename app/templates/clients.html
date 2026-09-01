@@ -1,0 +1,96 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Clientes | Vidraçaria Braga{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Cadastros</p>
+        <h2>Clientes</h2>
+        <p>Cadastre os dados utilizados nos orçamentos.</p>
+    </div>
+    <a class="button button-secondary" href="{{ url_for('main.index') }}">Voltar ao início</a>
+</section>
+
+<section class="card">
+    <h3>Novo cliente</h3>
+
+    {% if error %}
+        <p class="alert alert-error">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" class="form-grid">
+        <label class="field">
+            <span>Nome *</span>
+            <input
+                type="text"
+                name="name"
+                value="{{ request.form.get('name', '') }}"
+                required
+                autofocus
+            >
+        </label>
+
+        <label class="field">
+            <span>Telefone / Celular</span>
+            <input
+                type="tel"
+                name="phone"
+                placeholder="(14) 99999-9999"`r`n                placeholder="(14) 91111-1111"`r`n                placeholder="(14) 99999-9999"
+                value="{{ request.form.get('phone', '') }}"
+            >
+        </label>
+
+        <label class="field field-full">
+            <span>Endereço</span>
+            <input
+                type="text"
+                name="address"
+                value="{{ request.form.get('address', '') }}"
+            >
+        </label>
+
+        <div class="form-actions field-full">
+            <button class="button" type="submit">Salvar cliente</button>
+        </div>
+    </form>
+</section>
+
+<section class="card">
+    <div class="section-heading">
+        <h3>Clientes cadastrados</h3>
+        <span class="count-badge">{{ clients|length }}</span>
+    </div>
+
+    {% if clients %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Telefone / Celular</th>
+                        <th>Endereço</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                        <tr>
+                            <td>{{ client["name"] }}</td>
+                            <td>{{ client["phone"] or "—" }}</td>
+                            <td>{{ client["address"] or "—" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">Nenhum cliente cadastrado ainda.</p>
+    {% endif %}
+</section>
+{% endblock %}
+
+
+
+
+
+
