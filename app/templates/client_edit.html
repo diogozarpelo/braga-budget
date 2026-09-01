@@ -1,0 +1,57 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Editar cliente | Vidraçaria Braga{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Clientes</p>
+        <h2>Editar cliente</h2>
+        <p>Atualize os dados utilizados nos orçamentos.</p>
+    </div>
+    <a class="button button-secondary" href="{{ url_for('main.clients') }}">Voltar aos clientes</a>
+</section>
+
+<section class="card">
+    {% if error %}
+        <p class="alert alert-error">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" class="form-grid">
+        <label class="field">
+            <span>Nome *</span>
+            <input
+                type="text"
+                name="name"
+                value="{{ request.form.get('name', client['name']) }}"
+                required
+                autofocus
+            >
+        </label>
+
+        <label class="field">
+            <span>Telefone / Celular</span>
+            <input
+                type="tel"
+                name="phone"
+                placeholder="(14) 99999-9999"
+                value="{{ request.form.get('phone', client['phone']) }}"
+            >
+        </label>
+
+        <label class="field field-full">
+            <span>Endereço</span>
+            <input
+                type="text"
+                name="address"
+                value="{{ request.form.get('address', client['address']) }}"
+            >
+        </label>
+
+        <div class="form-actions field-full">
+            <a class="button button-secondary" href="{{ url_for('main.clients') }}">Cancelar</a>
+            <button type="submit">Salvar alterações</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

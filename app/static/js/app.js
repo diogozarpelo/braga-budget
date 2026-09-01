@@ -27,3 +27,60 @@ if (phoneInput) {
         event.target.value = formatPhone(event.target.value);
     });
 }
+
+const deactivateModal = document.querySelector("#deactivate-modal");
+const deactivateClientName = document.querySelector("#deactivate-client-name");
+const cancelDeactivationButton = document.querySelector("#cancel-deactivation");
+const confirmDeactivationButton = document.querySelector("#confirm-deactivation");
+const deactivateForms = document.querySelectorAll(".deactivate-form");
+
+let pendingDeactivationForm = null;
+
+function closeDeactivationModal() {
+    if (!deactivateModal) {
+        return;
+    }
+
+    deactivateModal.hidden = true;
+    document.body.classList.remove("modal-open");
+    pendingDeactivationForm = null;
+}
+
+if (
+    deactivateModal &&
+    deactivateClientName &&
+    cancelDeactivationButton &&
+    confirmDeactivationButton
+) {
+    deactivateForms.forEach((form) => {
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+
+            pendingDeactivationForm = form;
+            deactivateClientName.textContent = form.dataset.clientName;
+            deactivateModal.hidden = false;
+            document.body.classList.add("modal-open");
+            cancelDeactivationButton.focus();
+        });
+    });
+
+    cancelDeactivationButton.addEventListener("click", closeDeactivationModal);
+
+    confirmDeactivationButton.addEventListener("click", () => {
+        if (pendingDeactivationForm) {
+            pendingDeactivationForm.submit();
+        }
+    });
+
+    deactivateModal.addEventListener("click", (event) => {
+        if (event.target === deactivateModal) {
+            closeDeactivationModal();
+        }
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !deactivateModal.hidden) {
+            closeDeactivationModal();
+        }
+    });
+}

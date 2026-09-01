@@ -36,7 +36,7 @@
             <input
                 type="tel"
                 name="phone"
-                placeholder="(14) 99999-9999"`r`n                placeholder="(14) 91111-1111"`r`n                placeholder="(14) 99999-9999"
+                placeholder="(14) 99999-9999"
                 value="{{ request.form.get('phone', '') }}"
             >
         </label>
@@ -70,6 +70,7 @@
                         <th>Nome</th>
                         <th>Telefone / Celular</th>
                         <th>Endereço</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -78,6 +79,20 @@
                             <td>{{ client["name"] }}</td>
                             <td>{{ client["phone"] or "—" }}</td>
                             <td>{{ client["address"] or "—" }}</td>
+                            <td>
+                                <div class="table-actions">
+                                    <a class="table-action" href="{{ url_for('main.edit_client', client_id=client['id']) }}">Editar</a>
+
+                                    <form
+                                        method="post"
+                                        action="{{ url_for('main.deactivate_client', client_id=client['id']) }}"
+                                        class="inline-form deactivate-form"
+                                        data-client-name="{{ client['name'] }}"
+                                    >
+                                        <button class="table-action table-action-danger" type="submit">Desativar</button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -87,10 +102,26 @@
         <p class="empty-state">Nenhum cliente cadastrado ainda.</p>
     {% endif %}
 </section>
+
+<div class="modal-backdrop" id="deactivate-modal" hidden>
+    <section class="confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="deactivate-modal-title">
+        <div class="modal-warning" aria-hidden="true">!</div>
+
+        <h3 id="deactivate-modal-title">Desativar cliente?</h3>
+
+        <p>
+            Tem certeza de que deseja desativar
+            <strong id="deactivate-client-name"></strong>?
+        </p>
+
+        <p class="modal-note">
+            O cliente deixará de aparecer na lista de clientes ativos.
+        </p>
+
+        <div class="modal-actions">
+            <button class="button button-secondary" id="cancel-deactivation" type="button">Cancelar</button>
+            <button class="button button-danger" id="confirm-deactivation" type="button">Desativar cliente</button>
+        </div>
+    </section>
+</div>
 {% endblock %}
-
-
-
-
-
-

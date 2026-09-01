@@ -250,3 +250,124 @@ button:disabled {
 button:disabled:hover {
     background: #e5e7eb;
 }
+
+.table-action {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: #174a7e;
+    background: #e7eef6;
+    font-size: 14px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.table-action:hover {
+    background: #d7e3f0;
+}
+
+.form-actions {
+    align-items: center;
+    gap: 12px;
+}
+
+.table-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.inline-form {
+    margin: 0;
+}
+
+.table-action-danger {
+    color: #991b1b;
+    background: #fee2e2;
+}
+
+.table-action-danger:hover {
+    background: #fecaca;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.62);
+}
+
+.modal-backdrop[hidden] {
+    display: none;
+}
+
+.confirmation-modal {
+    width: min(440px, 100%);
+    padding: 32px;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+    text-align: center;
+}
+
+.confirmation-modal h3 {
+    margin: 16px 0 10px;
+    font-size: 24px;
+}
+
+.confirmation-modal p {
+    margin: 0 0 12px;
+    line-height: 1.5;
+}
+
+.modal-warning {
+    display: inline-flex;
+    width: 52px;
+    height: 52px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #991b1b;
+    background: #fee2e2;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.modal-note {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.button-danger {
+    color: #ffffff;
+    background: #b91c1c;
+}
+
+.button-danger:hover {
+    background: #991b1b;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+@media (max-width: 500px) {
+    .modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .modal-actions .button {
+        width: 100%;
+    }
+}
