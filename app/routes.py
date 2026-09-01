@@ -383,29 +383,21 @@ def quote_detail(quote_id):
         glass_subtotal_cents
         + components_subtotal_cents
     )
-    labor_cents = percentage_of_cents(
+    price_breakdown = calculate_price_breakdown(
         materials_subtotal_cents,
-        quote["labor_percentage"],
+        quote,
     )
-    subtotal_with_labor_cents = (
-        materials_subtotal_cents
-        + labor_cents
+    calculated_total_cents = price_breakdown[
+        "calculated_total_cents"
+    ]
+    display_total_cents = (
+        quote["manual_total_cents"]
+        if quote["manual_total_cents"] is not None
+        else calculated_total_cents
     )
-    difficulty_cents = percentage_of_cents(
-        subtotal_with_labor_cents,
-        quote["difficulty_percentage"],
-    )
-    subtotal_before_discount_cents = (
-        subtotal_with_labor_cents
-        + difficulty_cents
-    )
-    discount_cents = percentage_of_cents(
-        subtotal_before_discount_cents,
-        quote["discount_percentage"],
-    )
-    final_total_cents = (
-        subtotal_before_discount_cents
-        - discount_cents
+    manual_adjustment_cents = (
+        display_total_cents
+        - calculated_total_cents
     )
 
     return render_template(
@@ -416,10 +408,13 @@ def quote_detail(quote_id):
         glass_subtotal_cents=glass_subtotal_cents,
         components_subtotal_cents=components_subtotal_cents,
         materials_subtotal_cents=materials_subtotal_cents,
-        labor_cents=labor_cents,
-        difficulty_cents=difficulty_cents,
-        discount_cents=discount_cents,
-        final_total_cents=final_total_cents,
+        labor_cents=price_breakdown["labor_cents"],
+        difficulty_cents=price_breakdown["difficulty_cents"],
+        discount_cents=price_breakdown["discount_cents"],
+        calculated_total_cents=calculated_total_cents,
+        display_total_cents=display_total_cents,
+        manual_adjustment_cents=manual_adjustment_cents,
+        final_total_cents=display_total_cents,
     )
 
 
@@ -1082,3 +1077,173 @@ def remove_quote_item_component(
         url_for("main.quote_detail", quote_id=quote_id, _anchor="quote-items")
     )
 
+
+
+def calculate_price_breakdown(
+    materials_subtotal_cents,
+    quote,
+):
+    labor_cents = percentage_of_cents(
+        materials_subtotal_cents,
+        quote["labor_percentage"],
+    )
+    subtotal_with_labor_cents = (
+        materials_subtotal_cents
+        + labor_cents
+    )
+    difficulty_cents = percentage_of_cents(
+        subtotal_with_labor_cents,
+        quote["difficulty_percentage"],
+    )
+    subtotal_before_discount_cents = (
+        subtotal_with_labor_cents
+        + difficulty_cents
+    )
+    discount_cents = percentage_of_cents(
+        subtotal_before_discount_cents,
+        quote["discount_percentage"],
+    )
+    calculated_total_cents = (
+        subtotal_before_discount_cents
+        - discount_cents
+    )
+
+    return {
+        "labor_cents": labor_cents,
+        "difficulty_cents": difficulty_cents,
+        "discount_cents": discount_cents,
+        "calculated_total_cents": calculated_total_cents,
+    }
+
+
+
+@main.route(
+    "/orcamentos/<int:quote_id>/valor-final",
+    methods=("GET", "POST"),
+)
+def edit_quote_final_total(quote_id):
+    db = get_db()
+    quote = db.execute(
+        """
+        SELECT
+            quotes.*,
+            clients.name AS client_name
+        FROM quotes
+        JOIN clients ON clients.id = quotes.client_id
+        WHERE quotes.id = ?
+        """,
+        (quote_id,),
+    ).fetchone()
+
+    if quote is None:
+        abort(404)
+
+    if quote["status"] != "draft":
+        abort(400)
+
+    glass_total_cents = db.execute(
+        """
+        SELECT COALESCE(
+            SUM(
+                CAST(
+                    ROUND(
+                        charged_area_m2
+                        * quantity
+                        * glass_price_per_m2_cents
+                    )
+                    AS INTEGER
+                )
+            ),
+            0
+        )
+        FROM quote_items
+        WHERE quote_id = ?
+        """,
+        (quote_id,),
+    ).fetchone()[0]
+
+    components_total_cents = db.execute(
+        """
+        SELECT COALESCE(
+            SUM(
+                quote_item_components.quantity
+                * quote_item_components.unit_price_cents
+            ),
+            0
+        )
+        FROM quote_item_components
+        JOIN quote_items
+            ON quote_items.id = quote_item_components.quote_item_id
+        WHERE quote_items.quote_id = ?
+        """,
+        (quote_id,),
+    ).fetchone()[0]
+
+    materials_subtotal_cents = (
+        glass_total_cents
+        + components_total_cents
+    )
+    price_breakdown = calculate_price_breakdown(
+        materials_subtotal_cents,
+        quote,
+    )
+    calculated_total_cents = price_breakdown[
+        "calculated_total_cents"
+    ]
+
+    error = None
+
+    if request.method == "POST":
+        action = request.form.get("action", "save")
+
+        if action == "use_calculated":
+            manual_total_cents = None
+        else:
+            try:
+                manual_total_cents = money_to_cents(
+                    request.form.get("manual_total", "")
+                )
+            except InvalidOperation:
+                error = "Informe corretamente o valor final."
+
+            if error is None and manual_total_cents <= 0:
+                error = "O valor final deve ser maior que zero."
+
+        if error is None:
+            db.execute(
+                """
+                UPDATE quotes
+                SET
+                    manual_total_cents = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+                """,
+                (manual_total_cents, quote_id),
+            )
+            db.commit()
+
+            return redirect(
+                url_for(
+                    "main.quote_detail",
+                    quote_id=quote_id,
+                    _anchor="quote-total",
+                )
+            )
+
+    current_total_cents = (
+        quote["manual_total_cents"]
+        if quote["manual_total_cents"] is not None
+        else calculated_total_cents
+    )
+    current_total_for_input = (
+        f"{current_total_cents / 100:.2f}"
+        .replace(".", ",")
+    )
+
+    return render_template(
+        "edit_quote_final_total.html",
+        quote=quote,
+        calculated_total_cents=calculated_total_cents,
+        current_total_for_input=current_total_for_input,
+        error=error,
+    )

@@ -321,7 +321,7 @@
             {% endfor %}
         </div>
 
-        <div class="quote-summary">
+        <div class="quote-summary" id="quote-total">
             <div class="summary-row">
                 <span>Subtotal do vidro</span>
                 <strong>{{ glass_subtotal_cents|brl }}</strong>
@@ -361,10 +361,46 @@
                 <strong>− {{ discount_cents|brl }}</strong>
             </div>
 
+            {% if quote["manual_total_cents"] is not none %}
+                <div class="summary-row">
+                    <span>Total calculado</span>
+                    <strong>{{ calculated_total_cents|brl }}</strong>
+                </div>
+
+                <div class="summary-row summary-adjustment
+                    {% if manual_adjustment_cents > 0 %}
+                        summary-adjustment-positive
+                    {% elif manual_adjustment_cents < 0 %}
+                        summary-adjustment-negative
+                    {% endif %}
+                ">
+                    <span>Arredondamento</span>
+
+                    <strong>
+                        {% if manual_adjustment_cents > 0 %}+{% endif %}
+                        {{ manual_adjustment_cents|brl }}
+                    </strong>
+                </div>
+            {% endif %}
+
             <div class="summary-row summary-final">
-                <span>Total final</span>
-                <strong>{{ final_total_cents|brl }}</strong>
+                <span>Valor final</span>
+                <strong>{{ display_total_cents|brl }}</strong>
             </div>
+
+            {% if quote["status"] == "draft" %}
+                <div class="summary-final-action">
+                    <a
+                        class="button button-secondary"
+                        href="{{ url_for(
+                            'main.edit_quote_final_total',
+                            quote_id=quote['id']
+                        ) }}"
+                    >
+                        Ajustar valor final
+                    </a>
+                </div>
+            {% endif %}
         </div>
     {% else %}
         <p class="empty-state">Nenhum item adicionado ao orçamento ainda.</p>
@@ -407,6 +443,9 @@
     </section>
 </div>
 {% endblock %}
+
+
+
 
 
 

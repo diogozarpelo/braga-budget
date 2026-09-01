@@ -937,3 +937,81 @@ body.modal-open {
         align-items: flex-start;
     }
 }
+
+.calculated-total-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+    padding: 18px;
+    border-radius: 8px;
+    color: #174a7e;
+    background: #eff6ff;
+}
+
+.calculated-total-box span {
+    font-weight: bold;
+}
+
+.calculated-total-box strong {
+    font-size: 22px;
+}
+
+.summary-adjustment {
+    color: #7c3aed;
+}
+
+.summary-final-action {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+.summary-final-action .button {
+    padding: 9px 14px;
+    font-size: 13px;
+}
+
+.final-total-actions {
+    flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+    .calculated-total-box {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .summary-final-action .button {
+        width: 100%;
+        text-align: center;
+    }
+
+    .final-total-actions .button,
+    .final-total-actions button {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+.summary-adjustment {
+    color: #4b5563;
+}
+
+.summary-adjustment-positive {
+    color: #166534;
+}
+
+.summary-adjustment-negative {
+    color: #991b1b;
+}
+
+.final-total-use {
+    order: 2;
+}
+
+.final-total-save {
+    order: 3;
+}

@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS quotes (
         CHECK (difficulty_percentage BETWEEN 0 AND 100),
     discount_percentage REAL NOT NULL DEFAULT 0
         CHECK (discount_percentage BETWEEN 0 AND 100),
+    manual_total_cents INTEGER
+        CHECK (manual_total_cents IS NULL OR manual_total_cents >= 0),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (client_id) REFERENCES clients (id) ON DELETE RESTRICT
@@ -105,3 +107,4 @@ CREATE TABLE IF NOT EXISTS quote_item_components (
 
 CREATE INDEX IF NOT EXISTS quote_item_components_item_id_index
     ON quote_item_components (quote_item_id);
+

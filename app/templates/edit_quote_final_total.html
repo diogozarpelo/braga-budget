@@ -1,0 +1,79 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Ajustar valor final | Vidraçaria Braga{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Orçamento de {{ quote["client_name"] }}</p>
+        <h2>Ajustar valor final</h2>
+        <p>Defina o preço comercial sem perder o total calculado pelo sistema.</p>
+    </div>
+
+    <a
+        class="button button-secondary"
+        href="{{ url_for('main.quote_detail', quote_id=quote['id'], _anchor='quote-total') }}"
+    >
+        Voltar ao rascunho
+    </a>
+</section>
+
+<section class="card">
+    {% if error %}
+        <p class="alert alert-error">{{ error }}</p>
+    {% endif %}
+
+    <div class="calculated-total-box">
+        <span>Total calculado pelo sistema</span>
+        <strong>{{ calculated_total_cents|brl }}</strong>
+    </div>
+
+    <form method="post" class="form-grid" autocomplete="off">
+        <label class="field field-full">
+            <span>Valor final do orçamento *</span>
+            <input
+                type="text"
+                name="manual_total"
+                value="{{ request.form.get('manual_total', current_total_for_input) }}"
+                placeholder="Ex.: 4500,00"
+                inputmode="decimal"
+                required
+                autofocus
+            >
+        </label>
+
+        <div class="info-box field-full">
+            O total calculado continuará registrado. O sistema mostrará separadamente a diferença causada pelo ajuste manual.
+        </div>
+
+        <div class="form-actions field-full final-total-actions">
+            <a
+                class="button button-secondary"
+                href="{{ url_for('main.quote_detail', quote_id=quote['id'], _anchor='quote-total') }}"
+            >
+                Cancelar
+            </a>
+
+            <button
+                class="final-total-save"
+                type="submit"
+                name="action"
+                value="save"
+            >
+                Salvar valor final
+            </button>
+
+            <button
+                class="button button-secondary final-total-use"
+                type="submit"
+                name="action"
+                value="use_calculated"
+                formnovalidate
+            >
+                Usar valor calculado
+            </button>
+        </div>
+    </form>
+</section>
+{% endblock %}
+
