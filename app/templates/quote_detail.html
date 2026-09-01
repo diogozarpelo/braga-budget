@@ -389,7 +389,28 @@
             </div>
 
             {% if quote["status"] == "draft" %}
-                <div class="summary-final-action">
+                <div class="summary-final-actions">
+                    {% if quote["manual_total_cents"] is not none %}
+                        <form
+                            method="post"
+                            action="{{ url_for(
+                                'main.edit_quote_final_total',
+                                quote_id=quote['id']
+                            ) }}"
+                            class="inline-form"
+                        >
+                            <button
+                                class="button button-secondary"
+                                type="submit"
+                                name="action"
+                                value="use_calculated"
+                                formnovalidate
+                            >
+                                Usar valor calculado
+                            </button>
+                        </form>
+                    {% endif %}
+
                     <a
                         class="button button-secondary"
                         href="{{ url_for(
@@ -443,6 +464,7 @@
     </section>
 </div>
 {% endblock %}
+
 
 
 

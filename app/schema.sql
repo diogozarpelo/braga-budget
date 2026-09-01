@@ -108,3 +108,107 @@ CREATE TABLE IF NOT EXISTS quote_item_components (
 CREATE INDEX IF NOT EXISTS quote_item_components_item_id_index
     ON quote_item_components (quote_item_id);
 
+
+CREATE TRIGGER IF NOT EXISTS reset_manual_total_after_item_insert
+AFTER INSERT ON quote_items
+BEGIN
+    UPDATE quotes
+    SET
+        manual_total_cents = NULL,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE
+        id = NEW.quote_id
+        AND manual_total_cents IS NOT NULL;
+END;
+
+CREATE TRIGGER IF NOT EXISTS reset_manual_total_after_item_update
+AFTER UPDATE ON quote_items
+BEGIN
+    UPDATE quotes
+    SET
+        manual_total_cents = NULL,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE
+        id = NEW.quote_id
+        AND manual_total_cents IS NOT NULL;
+END;
+
+CREATE TRIGGER IF NOT EXISTS reset_manual_total_after_item_delete
+AFTER DELETE ON quote_items
+BEGIN
+    UPDATE quotes
+    SET
+        manual_total_cents = NULL,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE
+        id = OLD.quote_id
+        AND manual_total_cents IS NOT NULL;
+END;
+
+CREATE TRIGGER IF NOT EXISTS reset_manual_total_after_component_insert
+AFTER INSERT ON quote_item_components
+BEGIN
+    UPDATE quotes
+    SET
+        manual_total_cents = NULL,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE
+        id = (
+            SELECT quote_id
+            FROM quote_items
+            WHERE id = NEW.quote_item_id
+        )
+        AND manual_total_cents IS NOT NULL;
+END;
+
+CREATE TRIGGER IF NOT EXISTS reset_manual_total_after_component_update
+AFTER UPDATE ON quote_item_components
+BEGIN
+    UPDATE quotes
+    SET
+        manual_total_cents = NULL,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE
+        id = (
+            SELECT quote_id
+            FROM quote_items
+            WHERE id = NEW.quote_item_id
+        )
+        AND manual_total_cents IS NOT NULL;
+END;
+
+CREATE TRIGGER IF NOT EXISTS reset_manual_total_after_component_delete
+AFTER DELETE ON quote_item_components
+BEGIN
+    UPDATE quotes
+    SET
+        manual_total_cents = NULL,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE
+        id = (
+            SELECT quote_id
+            FROM quote_items
+            WHERE id = OLD.quote_item_id
+        )
+        AND manual_total_cents IS NOT NULL;
+END;
+
+CREATE TRIGGER IF NOT EXISTS reset_manual_total_after_price_conditions
+AFTER UPDATE OF
+    labor_percentage,
+    difficulty_percentage,
+    discount_percentage
+ON quotes
+WHEN
+    OLD.labor_percentage IS NOT NEW.labor_percentage
+    OR OLD.difficulty_percentage IS NOT NEW.difficulty_percentage
+    OR OLD.discount_percentage IS NOT NEW.discount_percentage
+BEGIN
+    UPDATE quotes
+    SET
+        manual_total_cents = NULL,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE
+        id = NEW.id
+        AND manual_total_cents IS NOT NULL;
+END;

@@ -179,3 +179,74 @@ if (
         }
     });
 }
+
+const componentForm = document.querySelector("#component-form");
+const componentCategory = componentForm?.querySelector(
+    'select[name="category"]'
+);
+const componentDescription = componentForm?.querySelector(
+    'input[name="description"]'
+);
+const componentQuantity = componentForm?.querySelector(
+    'input[name="quantity"]'
+);
+const kitSuggestion = document.querySelector("#kit-suggestion");
+const kitSuggestionText = document.querySelector("#kit-suggestion-text");
+
+let lastSuggestedKitDescription = "";
+
+function updateKitSuggestion(prefillFields) {
+    if (
+        !componentForm ||
+        !componentCategory ||
+        !componentDescription ||
+        !componentQuantity ||
+        !kitSuggestion ||
+        !kitSuggestionText
+    ) {
+        return;
+    }
+
+    if (componentCategory.value !== "kit") {
+        kitSuggestion.hidden = true;
+        return;
+    }
+
+    const widthMm = Number(componentForm.dataset.itemWidthMm);
+    const itemQuantity = Number(componentForm.dataset.itemQuantity);
+    const roundedWidthMm = Math.ceil(widthMm / 500) * 500;
+    const kitLengthMeters = roundedWidthMm / 1000;
+    const formattedLength = kitLengthMeters.toLocaleString("pt-BR", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 1,
+    });
+
+    const suggestedDescription = `Kit de instalação ${formattedLength} m`;
+
+    kitSuggestionText.textContent =
+        `${suggestedDescription}.`;
+
+    kitSuggestion.hidden = false;
+
+    if (prefillFields) {
+        if (
+            !componentDescription.value.trim() ||
+            componentDescription.value === lastSuggestedKitDescription
+        ) {
+            componentDescription.value = suggestedDescription;
+        }
+
+        componentQuantity.value = itemQuantity;
+    }
+
+    lastSuggestedKitDescription = suggestedDescription;
+}
+
+if (componentCategory) {
+    componentCategory.addEventListener("change", () => {
+        updateKitSuggestion(true);
+    });
+
+    updateKitSuggestion(false);
+}
+

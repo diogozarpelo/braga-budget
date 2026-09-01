@@ -564,6 +564,8 @@ def new_quote_item_component(quote_id, item_id):
         SELECT
             quote_items.id,
             quote_items.service_type,
+            quote_items.quantity AS item_quantity,
+            quote_items.width_mm,
             quotes.id AS quote_id,
             quotes.status,
             clients.name AS client_name
@@ -1247,3 +1249,4 @@ def edit_quote_final_total(quote_id):
         current_total_for_input=current_total_for_input,
         error=error,
     )
+

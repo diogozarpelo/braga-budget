@@ -1015,3 +1015,40 @@ body.modal-open {
 .final-total-save {
     order: 3;
 }
+
+.component-help {
+    display: grid;
+    gap: 8px;
+}
+
+.component-help .info-box {
+    margin: 0;
+    padding: 11px 14px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.summary-final-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.summary-final-actions .button {
+    padding: 9px 14px;
+    font-size: 13px;
+}
+
+@media (max-width: 600px) {
+    .summary-final-actions,
+    .summary-final-actions .inline-form,
+    .summary-final-actions .button {
+        width: 100%;
+    }
+
+    .summary-final-actions .button {
+        text-align: center;
+    }
+}
