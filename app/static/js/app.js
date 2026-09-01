@@ -84,3 +84,35 @@ if (
         }
     });
 }
+
+const widthInput = document.querySelector('input[name="width_mm"]');
+const heightInput = document.querySelector('input[name="height_mm"]');
+const exactAreaOutput = document.querySelector("#exact-area-output");
+
+function updateExactArea() {
+    if (!widthInput || !heightInput || !exactAreaOutput) {
+        return;
+    }
+
+    const widthMm = Number(widthInput.value);
+    const heightMm = Number(heightInput.value);
+
+    if (widthMm > 0 && heightMm > 0) {
+        const areaM2 = (widthMm * heightMm) / 1000000;
+
+        exactAreaOutput.textContent = `${areaM2.toLocaleString("pt-BR", {
+            minimumFractionDigits: 4,
+            maximumFractionDigits: 4,
+        })} m²`;
+
+        return;
+    }
+
+    exactAreaOutput.textContent = "0,0000 m²";
+}
+
+if (widthInput && heightInput && exactAreaOutput) {
+    widthInput.addEventListener("input", updateExactArea);
+    heightInput.addEventListener("input", updateExactArea);
+    updateExactArea();
+}

@@ -94,12 +94,89 @@
 </section>
 
 <section class="card">
-    <div class="section-heading">
-        <h3>Itens do orçamento</h3>
-        <span class="count-badge">0</span>
+    <div class="section-toolbar">
+        <div class="section-heading">
+            <h3>Itens do orçamento</h3>
+            <span class="count-badge">{{ items|length }}</span>
+        </div>
+
+        {% if quote["status"] == "draft" %}
+            <a
+                class="button"
+                href="{{ url_for('main.new_quote_item', quote_id=quote['id']) }}"
+            >
+                Adicionar item
+            </a>
+        {% endif %}
     </div>
 
-    <p class="empty-state">Nenhum item adicionado ao orçamento ainda.</p>
+    {% if items %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Serviço</th>
+                        <th>Medidas</th>
+                        <th>Vidro</th>
+                        <th>Área cobrada</th>
+                        <th>Quantidade</th>
+                        <th>Total do vidro</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in items %}
+                        <tr>
+                            <td>
+                                <strong>{{ item["service_type"] }}</strong>
+
+                                {% if item["description"] %}
+                                    <span class="item-meta">
+                                        {{ item["description"] }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ item["width_mm"] }} × {{ item["height_mm"] }} mm
+                            </td>
+
+                            <td>
+                                <strong>{{ item["glass_type"] }}</strong>
+                                <span class="item-meta">
+                                    {{ "%g"|format(item["thickness_mm"]) }} mm
+                                    {% if item["glass_color"] %}
+                                        · {{ item["glass_color"] }}
+                                    {% endif %}
+                                    {% if item["finish"] %}
+                                        · {{ item["finish"] }}
+                                    {% endif %}
+                                </span>
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(item["charged_area_m2"])|replace(".", ",") }} m²
+                            </td>
+
+                            <td>{{ item["quantity"] }}</td>
+
+                            <td>
+                                <strong>{{ item["glass_total_cents"]|brl }}</strong>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="quote-subtotal">
+            <span>Subtotal do vidro</span>
+            <strong>{{ glass_subtotal_cents|brl }}</strong>
+        </div>
+    {% else %}
+        <p class="empty-state">Nenhum item adicionado ao orçamento ainda.</p>
+    {% endif %}
 </section>
 {% endblock %}
+
 
