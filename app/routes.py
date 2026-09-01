@@ -759,3 +759,148 @@ def edit_quote_conditions(quote_id):
         error=error,
     )
 
+
+
+@main.route(
+    "/orcamentos/<int:quote_id>/itens/<int:item_id>/editar",
+    methods=("GET", "POST"),
+)
+def edit_quote_item(quote_id, item_id):
+    db = get_db()
+    quote = db.execute(
+        """
+        SELECT
+            quotes.id,
+            quotes.status,
+            clients.name AS client_name
+        FROM quotes
+        JOIN clients ON clients.id = quotes.client_id
+        WHERE quotes.id = ?
+        """,
+        (quote_id,),
+    ).fetchone()
+
+    item = db.execute(
+        """
+        SELECT *
+        FROM quote_items
+        WHERE id = ? AND quote_id = ?
+        """,
+        (item_id, quote_id),
+    ).fetchone()
+
+    if quote is None or item is None:
+        abort(404)
+
+    if quote["status"] != "draft":
+        abort(400)
+
+    error = None
+
+    if request.method == "POST":
+        service_type = request.form.get("service_type", "").strip()
+        description = request.form.get("description", "").strip()
+        glass_type = request.form.get("glass_type", "").strip()
+        glass_color = request.form.get("glass_color", "").strip()
+        finish = request.form.get("finish", "").strip()
+
+        try:
+            quantity = int(request.form.get("quantity", ""))
+            width_mm = int(request.form.get("width_mm", ""))
+            height_mm = int(request.form.get("height_mm", ""))
+            charged_area_m2 = parse_decimal(
+                request.form.get("charged_area_m2", "")
+            )
+            thickness_mm = parse_decimal(
+                request.form.get("thickness_mm", "")
+            )
+            glass_price_per_m2_cents = money_to_cents(
+                request.form.get("glass_price_per_m2", "")
+            )
+        except (ValueError, InvalidOperation):
+            error = "Preencha corretamente as medidas, quantidades e valores."
+
+        if error is None and not service_type:
+            error = "Informe o tipo de serviço."
+        elif error is None and not glass_type:
+            error = "Informe o tipo de vidro."
+        elif error is None and quantity <= 0:
+            error = "A quantidade deve ser maior que zero."
+        elif error is None and (width_mm <= 0 or height_mm <= 0):
+            error = "A largura e a altura devem ser maiores que zero."
+        elif error is None and charged_area_m2 <= 0:
+            error = "A área cobrada deve ser maior que zero."
+        elif error is None and thickness_mm <= 0:
+            error = "A espessura deve ser maior que zero."
+        elif error is None and glass_price_per_m2_cents <= 0:
+            error = "O preço do vidro deve ser maior que zero."
+
+        if error is None:
+            exact_area_m2 = (
+                Decimal(width_mm)
+                * Decimal(height_mm)
+                / Decimal("1000000")
+            ).quantize(
+                Decimal("0.0001"),
+                rounding=ROUND_HALF_UP,
+            )
+
+            db.execute(
+                """
+                UPDATE quote_items
+                SET
+                    service_type = ?,
+                    description = ?,
+                    quantity = ?,
+                    width_mm = ?,
+                    height_mm = ?,
+                    exact_area_m2 = ?,
+                    charged_area_m2 = ?,
+                    glass_type = ?,
+                    thickness_mm = ?,
+                    glass_color = ?,
+                    finish = ?,
+                    glass_price_per_m2_cents = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ? AND quote_id = ?
+                """,
+                (
+                    service_type,
+                    description,
+                    quantity,
+                    width_mm,
+                    height_mm,
+                    float(exact_area_m2),
+                    float(charged_area_m2),
+                    glass_type,
+                    float(thickness_mm),
+                    glass_color,
+                    finish,
+                    glass_price_per_m2_cents,
+                    item_id,
+                    quote_id,
+                ),
+            )
+            db.commit()
+
+            return redirect(
+                url_for("main.quote_detail", quote_id=quote_id)
+            )
+
+    charged_area_for_input = (
+        f"{item['charged_area_m2']:.2f}"
+        .replace(".", ",")
+    )
+    glass_price_for_input = (
+        f"{item['glass_price_per_m2_cents'] / 100:.2f}"
+        .replace(".", ",")
+    )
+
+    return render_template(
+        "edit_quote_item.html",
+        quote=quote,
+        item=item,
+        charged_area_for_input=charged_area_for_input,
+        glass_price_for_input=glass_price_for_input,
+        error=error,
+    )

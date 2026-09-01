@@ -689,3 +689,20 @@ body.modal-open {
     line-height: 1.5;
     white-space: pre-line;
 }
+
+.item-actions-cell {
+    vertical-align: top;
+}
+
+.item-actions {
+    display: grid;
+    gap: 6px;
+    min-width: 142px;
+}
+
+.item-actions .table-action {
+    padding: 6px 9px;
+    font-size: 12px;
+    text-align: center;
+    white-space: nowrap;
+}

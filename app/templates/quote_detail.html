@@ -199,17 +199,29 @@
                                 <strong>{{ item["glass_total_cents"]|brl }}</strong>
                             </td>
 
-                            <td>
-                                <a
-                                    class="table-action"
-                                    href="{{ url_for(
-                                        'main.new_quote_item_component',
-                                        quote_id=quote['id'],
-                                        item_id=item['id']
-                                    ) }}"
-                                >
-                                    Adicionar componente
-                                </a>
+                            <td class="item-actions-cell"><div class="item-actions">
+                                    <a
+                                        class="table-action"
+                                        href="{{ url_for(
+                                            'main.edit_quote_item',
+                                            quote_id=quote['id'],
+                                            item_id=item['id']
+                                        ) }}"
+                                    >
+                                        Editar item
+                                    </a>
+
+                                    <a
+                                        class="table-action"
+                                        href="{{ url_for(
+                                            'main.new_quote_item_component',
+                                            quote_id=quote['id'],
+                                            item_id=item['id']
+                                        ) }}"
+                                    >
+                                        Adicionar componente
+                                    </a>
+                                </div>
                             </td>
                         </tr>
 
@@ -296,6 +308,9 @@
     {% endif %}
 </section>
 {% endblock %}
+
+
+
 
 
 
