@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Dados da vidraçaria | Vidraçaria Braga{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <h2>Dados da vidraçaria</h2>
+        <p>Cadastro utilizado na identificação dos orçamentos emitidos.</p>
+    </div>
+
+    <a class="button button-secondary" href="{{ url_for('main.index') }}">
+        Voltar ao início
+    </a>
+</section>
+
+{% if request.args.get("edit") == "1" %}
+    <section class="card">
+        <h3>Editar informações</h3>
+
+        {% if error %}
+            <p class="alert alert-error">{{ error }}</p>
+        {% endif %}
+
+        <form method="post" class="form-grid">
+            <label class="field field-full">
+                <span>Nome da vidraçaria *</span>
+                <input
+                    type="text"
+                    name="business_name"
+                    value="{{ request.form.get('business_name', settings['business_name']) }}"
+                    placeholder="Ex.: Vidraçaria Braga"
+                    required
+                    autofocus
+                >
+            </label>
+
+            <label class="field">
+                <span>Telefone / Celular</span>
+                <input
+                    type="tel"
+                    name="phone"
+                    value="{{ request.form.get('phone', settings['phone']) }}"
+                    placeholder="Ex.: (14) 99999-9999"
+                >
+            </label>
+
+            <label class="field">
+                <span>CNPJ</span>
+                <input
+                    type="text"
+                    name="cnpj"
+                    value="{{ request.form.get('cnpj', settings['cnpj']) }}"
+                    placeholder="Ex.: 00.000.000/0000-00"
+                    inputmode="numeric"
+                >
+            </label>
+
+            <label class="field">
+                <span>Validade padrão *</span>
+                <input
+                    type="number"
+                    name="default_validity_days"
+                    value="{{ request.form.get('default_validity_days', settings['default_validity_days']) }}"
+                    min="1"
+                    step="1"
+                    required
+                >
+                <small>Quantidade de dias em que a proposta será válida.</small>
+            </label>
+
+            <label class="field">
+                <span>Prazo de execução padrão *</span>
+                <input
+                    type="number"
+                    name="default_execution_days"
+                    value="{{ request.form.get('default_execution_days', settings['default_execution_days']) }}"
+                    min="1"
+                    step="1"
+                    required
+                >
+                <small>Prazo inicial previsto para executar o serviço.</small>
+            </label>
+
+            <label class="field field-full">
+                <span>Garantia padrão</span>
+                <textarea
+                    name="warranty_text"
+                    rows="5"
+                    placeholder="Descreva as condições de garantia oferecidas."
+                >{{ request.form.get('warranty_text', settings['warranty_text']) }}</textarea>
+            </label>
+
+            <div class="settings-notice field-full">
+                Estes padrões serão utilizados somente em novos orçamentos. Os rascunhos já criados manterão suas condições atuais.
+            </div>
+
+            <div class="form-actions field-full">
+                <a class="button button-secondary" href="{{ url_for('main.settings') }}">
+                    Cancelar
+                </a>
+                <button type="submit">Salvar informações</button>
+            </div>
+        </form>
+    </section>
+{% else %}
+    {% if request.args.get("saved") == "1" %}
+        <div class="save-toast" role="status" aria-live="polite">
+            <span class="save-toast-icon">&#10003;</span>
+            <span>Dados salvos</span>
+        </div>
+    {% endif %}
+
+    <section class="business-profile-card">
+        <div class="business-profile-header">
+            <div>
+                <span class="selected-business">
+                    Essa vidraçaria está selecionada
+                </span>
+                <h3>{{ settings["business_name"] }}</h3>
+                <p>Estes dados serão utilizados nos novos orçamentos.</p>
+            </div>
+
+            <a
+                class="button button-secondary"
+                href="{{ url_for('main.settings', edit=1) }}"
+            >
+                Editar informações
+            </a>
+        </div>
+
+        <div class="business-profile-details">
+            <div class="detail-item">
+                <span>Telefone / Celular</span>
+                <strong>{{ settings["phone"] or "Não informado" }}</strong>
+            </div>
+
+            <div class="detail-item">
+                <span>CNPJ</span>
+                <strong>{{ settings["cnpj"] or "Não informado" }}</strong>
+            </div>
+
+            <div class="detail-item">
+                <span>Validade padrão</span>
+                <strong>{{ settings["default_validity_days"] }} dias</strong>
+            </div>
+
+            <div class="detail-item">
+                <span>Prazo de execução</span>
+                <strong>{{ settings["default_execution_days"] }} dias</strong>
+            </div>
+        </div>
+
+        <div class="business-warranty">
+            <span>Garantia padrão</span>
+            <p>{{ settings["warranty_text"] or "Não informada" }}</p>
+        </div>
+    </section>
+{% endif %}
+{% endblock %}

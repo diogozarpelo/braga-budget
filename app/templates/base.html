@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,24 @@
 </head>
 <body>
     <header class="topbar">
-        <h1>Vidraçaria Braga</h1>
+        <div class="topbar-content">
+            <h1>
+                <a
+                    class="topbar-home"
+                    href="{{ url_for('main.index') }}"
+                    aria-label="Voltar ao início"
+                    title="Voltar ao início"
+                >
+                    Vidraçaria Braga
+                </a>
+            </h1>
+
+            <nav class="topbar-nav" aria-label="Navegação principal">
+                <a href="{{ url_for('main.clients') }}">Clientes</a>
+                <a href="{{ url_for('main.quotes') }}">Orçamentos</a>
+                <a href="{{ url_for('main.settings') }}">Dados da vidraçaria</a>
+            </nav>
+        </div>
     </header>
 
     <main class="container">
@@ -18,5 +35,3 @@
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
-
-

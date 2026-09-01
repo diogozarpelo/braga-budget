@@ -250,3 +250,56 @@ if (componentCategory) {
     updateKitSuggestion(false);
 }
 
+
+
+function formatCnpj(value) {
+    const digits = value.replace(/\D/g, "").slice(0, 14);
+
+    if (digits.length <= 2) {
+        return digits;
+    }
+
+    if (digits.length <= 5) {
+        return `${digits.slice(0, 2)}.${digits.slice(2)}`;
+    }
+
+    if (digits.length <= 8) {
+        return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
+    }
+
+    if (digits.length <= 12) {
+        return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
+    }
+
+    return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
+}
+
+const cnpjInput = document.querySelector('input[name="cnpj"]');
+
+if (cnpjInput) {
+    cnpjInput.addEventListener("input", (event) => {
+        event.target.value = formatCnpj(event.target.value);
+    });
+}
+
+
+const settingsSaveToast = document.querySelector(".save-toast");
+
+if (settingsSaveToast) {
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.delete("saved");
+
+    window.history.replaceState(
+        null,
+        "",
+        `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`
+    );
+
+    window.setTimeout(() => {
+        settingsSaveToast.classList.add("is-hiding");
+
+        window.setTimeout(() => {
+            settingsSaveToast.remove();
+        }, 250);
+    }, 2000);
+}

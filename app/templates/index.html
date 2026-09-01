@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}Início | Vidraçaria Braga{% endblock %}
 
@@ -9,9 +9,13 @@
     <p>Cadastre clientes e prepare os orçamentos da vidraçaria.</p>
 
     <div class="home-actions">
-        <a class="button" href="{{ url_for('main.clients') }}">Gerenciar clientes</a>
-        <a class="button" href="{{ url_for('main.quotes') }}">Gerenciar orçamentos</a>
+        <a class="button" href="{{ url_for('main.clients') }}">
+            Gerenciar clientes
+        </a>
+
+        <a class="button" href="{{ url_for('main.quotes') }}">
+            Gerenciar orçamentos
+        </a>
     </div>
 </section>
 {% endblock %}
-
