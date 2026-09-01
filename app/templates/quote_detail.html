@@ -111,6 +111,12 @@
     </div>
 
     {% if items %}
+        {% set category_labels = {
+            "kit": "Kit de instalação",
+            "accessory": "Acessório",
+            "other": "Outro material"
+        } %}
+
         <div class="table-wrapper">
             <table>
                 <thead>
@@ -121,6 +127,7 @@
                         <th>Área cobrada</th>
                         <th>Quantidade</th>
                         <th>Total do vidro</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
 
@@ -163,20 +170,75 @@
                             <td>
                                 <strong>{{ item["glass_total_cents"]|brl }}</strong>
                             </td>
+
+                            <td>
+                                <a
+                                    class="table-action"
+                                    href="{{ url_for(
+                                        'main.new_quote_item_component',
+                                        quote_id=quote['id'],
+                                        item_id=item['id']
+                                    ) }}"
+                                >
+                                    Adicionar componente
+                                </a>
+                            </td>
                         </tr>
+
+                        {% if components_by_item[item["id"]] %}
+                            <tr class="components-row">
+                                <td colspan="7">
+                                    <div class="components-panel">
+                                        <strong>Kits e acessórios</strong>
+
+                                        <div class="components-list">
+                                            {% for component in components_by_item[item["id"]] %}
+                                                <div class="component-entry">
+                                                    <div>
+                                                        <span class="component-category">
+                                                            {{ category_labels[component["category"]] }}
+                                                        </span>
+                                                        <strong>{{ component["description"] }}</strong>
+                                                    </div>
+
+                                                    <span>
+                                                        {{ component["quantity"] }}
+                                                        × {{ component["unit_price_cents"]|brl }}
+                                                        = <strong>{{ component["total_cents"]|brl }}</strong>
+                                                    </span>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
-        <div class="quote-subtotal">
-            <span>Subtotal do vidro</span>
-            <strong>{{ glass_subtotal_cents|brl }}</strong>
+        <div class="quote-summary">
+            <div class="summary-row">
+                <span>Subtotal do vidro</span>
+                <strong>{{ glass_subtotal_cents|brl }}</strong>
+            </div>
+
+            <div class="summary-row">
+                <span>Kits, acessórios e outros materiais</span>
+                <strong>{{ components_subtotal_cents|brl }}</strong>
+            </div>
+
+            <div class="summary-row summary-total">
+                <span>Total dos materiais</span>
+                <strong>{{ materials_subtotal_cents|brl }}</strong>
+            </div>
         </div>
     {% else %}
         <p class="empty-state">Nenhum item adicionado ao orçamento ainda.</p>
     {% endif %}
 </section>
 {% endblock %}
+
 
 

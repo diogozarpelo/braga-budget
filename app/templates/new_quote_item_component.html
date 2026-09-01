@@ -1,0 +1,111 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Adicionar componente | Vidraçaria Braga{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Orçamento de {{ item["client_name"] }}</p>
+        <h2>Adicionar componente</h2>
+        <p>Item: {{ item["service_type"] }}</p>
+    </div>
+
+    <a
+        class="button button-secondary"
+        href="{{ url_for('main.quote_detail', quote_id=item['quote_id']) }}"
+    >
+        Voltar ao rascunho
+    </a>
+</section>
+
+<section class="card">
+    {% if error %}
+        <p class="alert alert-error">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" class="form-grid" autocomplete="off">
+        <label class="field">
+            <span>Tipo *</span>
+            <select name="category" required autofocus>
+                <option value="">Selecione</option>
+                <option
+                    value="kit"
+                    {% if request.form.get('category') == 'kit' %}selected{% endif %}
+                >
+                    Kit de instalação
+                </option>
+                <option
+                    value="accessory"
+                    {% if request.form.get('category') == 'accessory' %}selected{% endif %}
+                >
+                    Acessório
+                </option>
+                <option
+                    value="other"
+                    {% if request.form.get('category') == 'other' %}selected{% endif %}
+                >
+                    Outro material
+                </option>
+            </select>
+        </label>
+
+        <label class="field">
+            <span>Descrição *</span>
+            <input
+                type="text"
+                name="description"
+                list="component-descriptions"
+                value="{{ request.form.get('description', '') }}"
+                placeholder="Ex.: Kit de instalação 2 m"
+                required
+            >
+        </label>
+
+        <datalist id="component-descriptions">
+            <option value="Kit de instalação 2 m">
+            <option value="Roldana">
+            <option value="Puxador">
+            <option value="Fechadura">
+        </datalist>
+
+        <label class="field">
+            <span>Quantidade *</span>
+            <input
+                type="number"
+                name="quantity"
+                value="{{ request.form.get('quantity', '1') }}"
+                min="1"
+                step="1"
+                required
+            >
+        </label>
+
+        <label class="field">
+            <span>Valor unitário *</span>
+            <input
+                type="text"
+                name="unit_price"
+                value="{{ request.form.get('unit_price', '') }}"
+                placeholder="Ex.: 350,00"
+                inputmode="decimal"
+                required
+            >
+        </label>
+
+        <div class="info-box field-full">
+            O sistema multiplicará automaticamente a quantidade pelo valor unitário.
+        </div>
+
+        <div class="form-actions field-full">
+            <a
+                class="button button-secondary"
+                href="{{ url_for('main.quote_detail', quote_id=item['quote_id']) }}"
+            >
+                Cancelar
+            </a>
+
+            <button type="submit">Salvar componente</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

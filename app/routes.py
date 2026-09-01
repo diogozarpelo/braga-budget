@@ -339,16 +339,59 @@ def quote_detail(quote_id):
         (quote_id,),
     ).fetchall()
 
+    components = db.execute(
+        """
+        SELECT
+            quote_item_components.id,
+            quote_item_components.quote_item_id,
+            quote_item_components.category,
+            quote_item_components.description,
+            quote_item_components.quantity,
+            quote_item_components.unit_price_cents,
+            (
+                quote_item_components.quantity
+                * quote_item_components.unit_price_cents
+            ) AS total_cents
+        FROM quote_item_components
+        JOIN quote_items
+            ON quote_items.id = quote_item_components.quote_item_id
+        WHERE quote_items.quote_id = ?
+        ORDER BY
+            quote_item_components.position,
+            quote_item_components.id
+        """,
+        (quote_id,),
+    ).fetchall()
+
+    components_by_item = {
+        item["id"]: []
+        for item in items
+    }
+
+    for component in components:
+        components_by_item[component["quote_item_id"]].append(component)
+
     glass_subtotal_cents = sum(
         item["glass_total_cents"]
         for item in items
+    )
+    components_subtotal_cents = sum(
+        component["total_cents"]
+        for component in components
+    )
+    materials_subtotal_cents = (
+        glass_subtotal_cents
+        + components_subtotal_cents
     )
 
     return render_template(
         "quote_detail.html",
         quote=quote,
         items=items,
+        components_by_item=components_by_item,
         glass_subtotal_cents=glass_subtotal_cents,
+        components_subtotal_cents=components_subtotal_cents,
+        materials_subtotal_cents=materials_subtotal_cents,
     )
 
 
@@ -485,3 +528,88 @@ def format_brl(cents):
         .replace(".", ",")
         .replace("#", ".")
     )
+
+
+@main.route(
+    "/orcamentos/<int:quote_id>/itens/<int:item_id>/componentes/novo",
+    methods=("GET", "POST"),
+)
+def new_quote_item_component(quote_id, item_id):
+    db = get_db()
+    item = db.execute(
+        """
+        SELECT
+            quote_items.id,
+            quote_items.service_type,
+            quotes.id AS quote_id,
+            quotes.status,
+            clients.name AS client_name
+        FROM quote_items
+        JOIN quotes ON quotes.id = quote_items.quote_id
+        JOIN clients ON clients.id = quotes.client_id
+        WHERE quote_items.id = ? AND quotes.id = ?
+        """,
+        (item_id, quote_id),
+    ).fetchone()
+
+    if item is None:
+        abort(404)
+
+    if item["status"] != "draft":
+        abort(400)
+
+    error = None
+
+    if request.method == "POST":
+        category = request.form.get("category", "").strip()
+        description = request.form.get("description", "").strip()
+
+        try:
+            quantity = int(request.form.get("quantity", ""))
+            unit_price_cents = money_to_cents(
+                request.form.get("unit_price", "")
+            )
+        except (ValueError, InvalidOperation):
+            error = "Preencha corretamente a quantidade e o valor."
+
+        if error is None and category not in {"kit", "accessory", "other"}:
+            error = "Selecione o tipo do componente."
+        elif error is None and not description:
+            error = "Informe a descrição do componente."
+        elif error is None and quantity <= 0:
+            error = "A quantidade deve ser maior que zero."
+        elif error is None and unit_price_cents <= 0:
+            error = "O valor unitário deve ser maior que zero."
+
+        if error is None:
+            db.execute(
+                """
+                INSERT INTO quote_item_components (
+                    quote_item_id,
+                    category,
+                    description,
+                    quantity,
+                    unit_price_cents
+                )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    item_id,
+                    category,
+                    description,
+                    quantity,
+                    unit_price_cents,
+                ),
+            )
+            db.commit()
+
+            return redirect(
+                url_for("main.quote_detail", quote_id=quote_id)
+            )
+
+    return render_template(
+        "new_quote_item_component.html",
+        item=item,
+        error=error,
+    )
+
