@@ -706,3 +706,32 @@ body.modal-open {
     text-align: center;
     white-space: nowrap;
 }
+
+.component-value-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.component-edit {
+    display: inline-block;
+    padding: 5px 8px;
+    border-radius: 5px;
+    color: #174a7e;
+    background: #e7eef6;
+    font-size: 12px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.component-edit:hover {
+    background: #d7e3f0;
+}
+
+@media (max-width: 600px) {
+    .component-value-actions {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+}

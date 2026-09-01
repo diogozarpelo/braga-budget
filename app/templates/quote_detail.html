@@ -241,11 +241,25 @@
                                                         <strong>{{ component["description"] }}</strong>
                                                     </div>
 
-                                                    <span>
-                                                        {{ component["quantity"] }}
-                                                        × {{ component["unit_price_cents"]|brl }}
-                                                        = <strong>{{ component["total_cents"]|brl }}</strong>
-                                                    </span>
+                                                    <div class="component-value-actions">
+                                                        <span>
+                                                            {{ component["quantity"] }}
+                                                            × {{ component["unit_price_cents"]|brl }}
+                                                            = <strong>{{ component["total_cents"]|brl }}</strong>
+                                                        </span>
+
+                                                        <a
+                                                            class="component-edit"
+                                                            href="{{ url_for(
+                                                                'main.edit_quote_item_component',
+                                                                quote_id=quote['id'],
+                                                                item_id=item['id'],
+                                                                component_id=component['id']
+                                                            ) }}"
+                                                        >
+                                                            Editar
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             {% endfor %}
                                         </div>
@@ -308,6 +322,7 @@
     {% endif %}
 </section>
 {% endblock %}
+
 
 
 

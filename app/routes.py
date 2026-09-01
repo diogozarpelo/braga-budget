@@ -904,3 +904,105 @@ def edit_quote_item(quote_id, item_id):
         glass_price_for_input=glass_price_for_input,
         error=error,
     )
+
+
+@main.route(
+    "/orcamentos/<int:quote_id>/itens/<int:item_id>/componentes/<int:component_id>/editar",
+    methods=("GET", "POST"),
+)
+def edit_quote_item_component(
+    quote_id,
+    item_id,
+    component_id,
+):
+    db = get_db()
+    component = db.execute(
+        """
+        SELECT
+            quote_item_components.*,
+            quote_items.service_type,
+            quotes.id AS quote_id,
+            quotes.status,
+            clients.name AS client_name
+        FROM quote_item_components
+        JOIN quote_items
+            ON quote_items.id = quote_item_components.quote_item_id
+        JOIN quotes
+            ON quotes.id = quote_items.quote_id
+        JOIN clients
+            ON clients.id = quotes.client_id
+        WHERE
+            quote_item_components.id = ?
+            AND quote_items.id = ?
+            AND quotes.id = ?
+        """,
+        (component_id, item_id, quote_id),
+    ).fetchone()
+
+    if component is None:
+        abort(404)
+
+    if component["status"] != "draft":
+        abort(400)
+
+    error = None
+
+    if request.method == "POST":
+        category = request.form.get("category", "").strip()
+        description = request.form.get("description", "").strip()
+
+        try:
+            quantity = int(request.form.get("quantity", ""))
+            unit_price_cents = money_to_cents(
+                request.form.get("unit_price", "")
+            )
+        except (ValueError, InvalidOperation):
+            error = "Preencha corretamente a quantidade e o valor."
+
+        if error is None and category not in {"kit", "accessory", "other"}:
+            error = "Selecione o tipo do componente."
+        elif error is None and not description:
+            error = "Informe a descrição do componente."
+        elif error is None and quantity <= 0:
+            error = "A quantidade deve ser maior que zero."
+        elif error is None and unit_price_cents <= 0:
+            error = "O valor unitário deve ser maior que zero."
+
+        if error is None:
+            db.execute(
+                """
+                UPDATE quote_item_components
+                SET
+                    category = ?,
+                    description = ?,
+                    quantity = ?,
+                    unit_price_cents = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ? AND quote_item_id = ?
+                """,
+                (
+                    category,
+                    description,
+                    quantity,
+                    unit_price_cents,
+                    component_id,
+                    item_id,
+                ),
+            )
+            db.commit()
+
+            return redirect(
+                url_for("main.quote_detail", quote_id=quote_id)
+            )
+
+    unit_price_for_input = (
+        f"{component['unit_price_cents'] / 100:.2f}"
+        .replace(".", ",")
+    )
+
+    return render_template(
+        "edit_quote_item_component.html",
+        component=component,
+        unit_price_for_input=unit_price_for_input,
+        error=error,
+    )
