@@ -1,0 +1,105 @@
+﻿{% extends "base.html" %}
+
+{% block title %}
+    {% if quote["quote_number"] %}
+        Orçamento nº {{ quote["quote_number"] }} | Vidraçaria Braga
+    {% else %}
+        Rascunho de orçamento | Vidraçaria Braga
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+{% set status_labels = {
+    "draft": "Rascunho",
+    "issued": "Emitido",
+    "approved": "Aprovado",
+    "rejected": "Recusado",
+    "cancelled": "Cancelado"
+} %}
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Orçamentos</p>
+
+        {% if quote["quote_number"] %}
+            <h2>Orçamento nº {{ quote["quote_number"] }}</h2>
+        {% else %}
+            <h2>Rascunho de orçamento</h2>
+        {% endif %}
+
+        <span class="status-badge status-{{ quote['status'] }}">
+            {{ status_labels[quote["status"]] }}
+        </span>
+    </div>
+
+    <a class="button button-secondary" href="{{ url_for('main.quotes') }}">Voltar aos orçamentos</a>
+</section>
+
+{% if not quote["quote_number"] %}
+    <div class="info-box">
+        Este rascunho ainda não possui número. A numeração será atribuída somente na emissão.
+    </div>
+{% endif %}
+
+<section class="card">
+    <h3>Cliente</h3>
+
+    <div class="detail-grid">
+        <div class="detail-item">
+            <span>Nome</span>
+            <strong>{{ quote["client_name"] }}</strong>
+        </div>
+
+        <div class="detail-item">
+            <span>Telefone / Celular</span>
+            <strong>{{ quote["client_phone"] or "Não informado" }}</strong>
+        </div>
+
+        <div class="detail-item detail-full">
+            <span>Endereço</span>
+            <strong>{{ quote["client_address"] or "Não informado" }}</strong>
+        </div>
+    </div>
+</section>
+
+<section class="card">
+    <h3>Condições do orçamento</h3>
+
+    <div class="detail-grid">
+        <div class="detail-item">
+            <span>Validade</span>
+            <strong>{{ quote["validity_days"] }} dias</strong>
+        </div>
+
+        <div class="detail-item">
+            <span>Prazo de execução</span>
+            <strong>{{ quote["execution_days"] }} dias</strong>
+        </div>
+
+        <div class="detail-item">
+            <span>Mão de obra</span>
+            <strong>{{ quote["labor_percentage"]|int }}% dos materiais</strong>
+        </div>
+
+        <div class="detail-item">
+            <span>Adicional de dificuldade</span>
+            <strong>{{ quote["difficulty_percentage"]|int }}%</strong>
+        </div>
+
+        <div class="detail-item">
+            <span>Desconto</span>
+            <strong>{{ quote["discount_percentage"]|int }}%</strong>
+        </div>
+    </div>
+</section>
+
+<section class="card">
+    <div class="section-heading">
+        <h3>Itens do orçamento</h3>
+        <span class="count-badge">0</span>
+    </div>
+
+    <p class="empty-state">Nenhum item adicionado ao orçamento ainda.</p>
+</section>
+{% endblock %}
+

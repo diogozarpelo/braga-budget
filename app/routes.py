@@ -149,3 +149,142 @@ def reactivate_client(client_id):
     db.commit()
 
     return redirect(url_for("main.inactive_clients"))
+
+
+@main.get("/orcamentos")
+def quotes():
+    db = get_db()
+
+    drafts = db.execute(
+        """
+        SELECT
+            quotes.id,
+            quotes.created_at,
+            clients.name AS client_name
+        FROM quotes
+        JOIN clients ON clients.id = quotes.client_id
+        WHERE quotes.status = 'draft'
+        ORDER BY quotes.created_at DESC, quotes.id DESC
+        """
+    ).fetchall()
+
+    issued_quotes = db.execute(
+        """
+        SELECT
+            quotes.id,
+            quotes.quote_number,
+            quotes.status,
+            quotes.issued_at,
+            clients.name AS client_name
+        FROM quotes
+        JOIN clients ON clients.id = quotes.client_id
+        WHERE quotes.status != 'draft'
+        ORDER BY quotes.issued_at DESC, quotes.id DESC
+        """
+    ).fetchall()
+
+    return render_template(
+        "quotes.html",
+        drafts=drafts,
+        issued_quotes=issued_quotes,
+    )
+
+
+@main.route("/orcamentos/novo", methods=("GET", "POST"))
+def new_quote():
+    db = get_db()
+    error = None
+
+    clients_list = db.execute(
+        """
+        SELECT id, name
+        FROM clients
+        WHERE active = 1
+        ORDER BY name COLLATE NOCASE
+        """
+    ).fetchall()
+
+    if request.method == "POST":
+        client_id = request.form.get("client_id", type=int)
+
+        client = None
+
+        if client_id is not None:
+            client = db.execute(
+                """
+                SELECT id
+                FROM clients
+                WHERE id = ? AND active = 1
+                """,
+                (client_id,),
+            ).fetchone()
+
+        if client is None:
+            error = "Selecione um cliente ativo."
+        else:
+            settings = db.execute(
+                """
+                SELECT
+                    default_validity_days,
+                    default_execution_days,
+                    warranty_text
+                FROM settings
+                WHERE id = 1
+                """
+            ).fetchone()
+
+            result = db.execute(
+                """
+                INSERT INTO quotes (
+                    client_id,
+                    validity_days,
+                    execution_days,
+                    warranty_text
+                )
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    client_id,
+                    settings["default_validity_days"],
+                    settings["default_execution_days"],
+                    settings["warranty_text"],
+                ),
+            )
+            db.commit()
+
+            return redirect(
+                url_for("main.quote_detail", quote_id=result.lastrowid)
+            )
+
+    return render_template(
+        "new_quote.html",
+        clients=clients_list,
+        error=error,
+    )
+
+
+@main.get("/orcamentos/<int:quote_id>")
+def quote_detail(quote_id):
+    db = get_db()
+    quote = db.execute(
+        """
+        SELECT
+            quotes.*,
+            clients.name AS client_name,
+            clients.phone AS client_phone,
+            clients.address AS client_address
+        FROM quotes
+        JOIN clients ON clients.id = quotes.client_id
+        WHERE quotes.id = ?
+        """,
+        (quote_id,),
+    ).fetchone()
+
+    if quote is None:
+        abort(404)
+
+    return render_template(
+        "quote_detail.html",
+        quote=quote,
+    )
+

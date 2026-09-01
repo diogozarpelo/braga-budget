@@ -1,0 +1,117 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Orçamentos | Vidraçaria Braga{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Orçamentos</p>
+        <h2>Orçamentos</h2>
+        <p>Prepare rascunhos e acompanhe as propostas já emitidas.</p>
+    </div>
+
+    <div class="page-actions">
+        <a class="button" href="{{ url_for('main.new_quote') }}">Novo orçamento</a>
+        <a class="button button-secondary" href="{{ url_for('main.index') }}">Voltar ao início</a>
+    </div>
+</section>
+
+<section class="card">
+    <div class="section-heading">
+        <h3>Rascunhos</h3>
+        <span class="count-badge">{{ drafts|length }}</span>
+    </div>
+
+    {% if drafts %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Criação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for draft in drafts %}
+                        <tr>
+                            <td>{{ draft["client_name"] }}</td>
+                            <td>
+                                {{ draft["created_at"][8:10] }}/{{ draft["created_at"][5:7] }}/{{ draft["created_at"][0:4] }}
+                            </td>
+                            <td>
+                                <a
+                                    class="table-action"
+                                    href="{{ url_for('main.quote_detail', quote_id=draft['id']) }}"
+                                >
+                                    Continuar
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">Nenhum rascunho em andamento.</p>
+    {% endif %}
+</section>
+
+<section class="card">
+    <div class="section-heading">
+        <h3>Orçamentos emitidos</h3>
+        <span class="count-badge">{{ issued_quotes|length }}</span>
+    </div>
+
+    {% if issued_quotes %}
+        {% set status_labels = {
+            "issued": "Emitido",
+            "approved": "Aprovado",
+            "rejected": "Recusado",
+            "cancelled": "Cancelado"
+        } %}
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Cliente</th>
+                        <th>Situação</th>
+                        <th>Emissão</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for quote in issued_quotes %}
+                        <tr>
+                            <td>Nº {{ quote["quote_number"] }}</td>
+                            <td>{{ quote["client_name"] }}</td>
+                            <td>
+                                <span class="status-badge status-{{ quote['status'] }}">
+                                    {{ status_labels[quote["status"]] }}
+                                </span>
+                            </td>
+                            <td>
+                                {{ quote["issued_at"][8:10] }}/{{ quote["issued_at"][5:7] }}/{{ quote["issued_at"][0:4] }}
+                            </td>
+                            <td>
+                                <a
+                                    class="table-action"
+                                    href="{{ url_for('main.quote_detail', quote_id=quote['id']) }}"
+                                >
+                                    Abrir
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">Nenhum orçamento emitido ainda.</p>
+    {% endif %}
+</section>
+{% endblock %}

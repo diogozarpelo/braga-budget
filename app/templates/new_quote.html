@@ -1,0 +1,56 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Novo orçamento | Vidraçaria Braga{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Orçamentos</p>
+        <h2>Novo orçamento</h2>
+        <p>Selecione o cliente para iniciar o preenchimento da proposta.</p>
+    </div>
+
+    <a class="button button-secondary" href="{{ url_for('main.quotes') }}">Voltar aos orçamentos</a>
+</section>
+
+<section class="card">
+    {% if error %}
+        <p class="alert alert-error">{{ error }}</p>
+    {% endif %}
+
+    {% if clients %}
+        <div class="info-box">
+            Este orçamento será salvo inicialmente como rascunho e receberá um número somente quando for emitido.
+        </div>
+
+        <form method="post" class="form-grid">
+            <label class="field field-full">
+                <span>Cliente *</span>
+
+                <select name="client_id" required autofocus>
+                    <option value="">Selecione um cliente</option>
+
+                    {% for client in clients %}
+                        <option
+                            value="{{ client['id'] }}"
+                            {% if request.form.get('client_id') == client['id']|string %}selected{% endif %}
+                        >
+                            {{ client["name"] }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </label>
+
+            <div class="form-actions field-full">
+                <a class="button button-secondary" href="{{ url_for('main.quotes') }}">Cancelar</a>
+                <button type="submit">Começar orçamento</button>
+            </div>
+        </form>
+    {% else %}
+        <div class="empty-state">
+            <p>É necessário ter pelo menos um cliente ativo para criar um orçamento.</p>
+            <a class="button" href="{{ url_for('main.clients') }}">Cadastrar cliente</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
