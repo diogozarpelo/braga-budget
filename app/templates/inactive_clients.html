@@ -1,0 +1,60 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Clientes desativados | Vidraçaria Braga{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Cadastros</p>
+        <h2>Clientes desativados</h2>
+        <p>Consulte e reative clientes que foram removidos da lista principal.</p>
+    </div>
+
+    <a class="button button-secondary" href="{{ url_for('main.clients') }}">Voltar aos clientes</a>
+</section>
+
+<section class="card">
+    <div class="section-heading">
+        <h3>Clientes desativados</h3>
+        <span class="count-badge">{{ clients|length }}</span>
+    </div>
+
+    {% if clients %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Telefone / Celular</th>
+                        <th>Endereço</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for client in clients %}
+                        <tr>
+                            <td>{{ client["name"] }}</td>
+                            <td>{{ client["phone"] or "—" }}</td>
+                            <td>{{ client["address"] or "—" }}</td>
+                            <td>
+                                <form
+                                    method="post"
+                                    action="{{ url_for('main.reactivate_client', client_id=client['id']) }}"
+                                    class="inline-form"
+                                >
+                                    <button class="table-action table-action-success" type="submit">
+                                        Reativar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">Nenhum cliente desativado.</p>
+    {% endif %}
+</section>
+{% endblock %}

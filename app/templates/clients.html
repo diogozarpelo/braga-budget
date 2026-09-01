@@ -9,7 +9,10 @@
         <h2>Clientes</h2>
         <p>Cadastre os dados utilizados nos orçamentos.</p>
     </div>
-    <a class="button button-secondary" href="{{ url_for('main.index') }}">Voltar ao início</a>
+    <div class="page-actions">
+        <a class="button button-secondary" href="{{ url_for('main.inactive_clients') }}">Clientes desativados</a>
+        <a class="button button-secondary" href="{{ url_for('main.index') }}">Voltar ao início</a>
+    </div>
 </section>
 
 <section class="card">
@@ -125,3 +128,5 @@
     </section>
 </div>
 {% endblock %}
+
+

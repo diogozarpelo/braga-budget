@@ -111,3 +111,41 @@ def deactivate_client(client_id):
     db.commit()
 
     return redirect(url_for("main.clients"))
+
+
+@main.get("/clientes/inativos")
+def inactive_clients():
+    db = get_db()
+    clients_list = db.execute(
+        """
+        SELECT id, name, phone, address
+        FROM clients
+        WHERE active = 0
+        ORDER BY name COLLATE NOCASE
+        """
+    ).fetchall()
+
+    return render_template(
+        "inactive_clients.html",
+        clients=clients_list,
+    )
+
+
+@main.post("/clientes/<int:client_id>/reativar")
+def reactivate_client(client_id):
+    db = get_db()
+    result = db.execute(
+        """
+        UPDATE clients
+        SET active = 1, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND active = 0
+        """,
+        (client_id,),
+    )
+
+    if result.rowcount == 0:
+        abort(404)
+
+    db.commit()
+
+    return redirect(url_for("main.inactive_clients"))

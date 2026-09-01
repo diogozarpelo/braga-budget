@@ -371,3 +371,34 @@ body.modal-open {
         width: 100%;
     }
 }
+
+.page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.table-action-success {
+    color: #166534;
+    background: #dcfce7;
+}
+
+.table-action-success:hover {
+    background: #bbf7d0;
+}
+
+@media (max-width: 700px) {
+    .page-actions {
+        justify-content: flex-start;
+        width: 100%;
+    }
+}
+
+.section-heading {
+    margin-bottom: 18px;
+}
+
+.section-heading h3 {
+    margin: 0;
+}
