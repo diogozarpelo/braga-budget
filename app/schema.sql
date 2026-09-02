@@ -1,4 +1,4 @@
-﻿CREATE TABLE IF NOT EXISTS settings (
+CREATE TABLE IF NOT EXISTS settings (
     id INTEGER PRIMARY KEY CHECK (id = 1),
     business_name TEXT NOT NULL DEFAULT 'Vidraçaria Braga',
     phone TEXT NOT NULL DEFAULT '',
@@ -88,6 +88,20 @@ CREATE TABLE IF NOT EXISTS quote_items (
 
 CREATE INDEX IF NOT EXISTS quote_items_quote_id_index
     ON quote_items (quote_id);
+
+CREATE TABLE IF NOT EXISTS components (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+    unit_price_cents INTEGER NOT NULL DEFAULT 0
+        CHECK (unit_price_cents >= 0),
+    active INTEGER NOT NULL DEFAULT 1
+        CHECK (active IN (0, 1)),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS components_active_name_index
+    ON components (active, name COLLATE NOCASE);
 
 CREATE TABLE IF NOT EXISTS quote_item_components (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

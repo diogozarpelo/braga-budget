@@ -85,6 +85,72 @@ if (
     });
 }
 
+const reactivateModal = document.querySelector("#reactivate-modal");
+const reactivateComponentName = document.querySelector(
+    "#reactivate-component-name"
+);
+const cancelReactivationButton = document.querySelector(
+    "#cancel-reactivation"
+);
+const confirmReactivationButton = document.querySelector(
+    "#confirm-reactivation"
+);
+const reactivateForms = document.querySelectorAll(".reactivate-form");
+
+let pendingReactivationForm = null;
+
+function closeReactivationModal() {
+    if (!reactivateModal) {
+        return;
+    }
+
+    reactivateModal.hidden = true;
+    document.body.classList.remove("modal-open");
+    pendingReactivationForm = null;
+}
+
+if (
+    reactivateModal &&
+    reactivateComponentName &&
+    cancelReactivationButton &&
+    confirmReactivationButton
+) {
+    reactivateForms.forEach((form) => {
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+
+            pendingReactivationForm = form;
+            reactivateComponentName.textContent = form.dataset.componentName;
+            reactivateModal.hidden = false;
+            document.body.classList.add("modal-open");
+            cancelReactivationButton.focus();
+        });
+    });
+
+    cancelReactivationButton.addEventListener(
+        "click",
+        closeReactivationModal
+    );
+
+    confirmReactivationButton.addEventListener("click", () => {
+        if (pendingReactivationForm) {
+            pendingReactivationForm.submit();
+        }
+    });
+
+    reactivateModal.addEventListener("click", (event) => {
+        if (event.target === reactivateModal) {
+            closeReactivationModal();
+        }
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !reactivateModal.hidden) {
+            closeReactivationModal();
+        }
+    });
+}
+
 const widthInput = document.querySelector('input[name="width_mm"]');
 const heightInput = document.querySelector('input[name="height_mm"]');
 const exactAreaOutput = document.querySelector("#exact-area-output");
@@ -287,7 +353,9 @@ const settingsSaveToast = document.querySelector(".save-toast");
 
 if (settingsSaveToast) {
     const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.delete("saved");
+    ["saved", "updated", "deactivated", "reactivated"].forEach(
+        (parameter) => currentUrl.searchParams.delete(parameter)
+    );
 
     window.history.replaceState(
         null,

@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Componentes | Vidraçaria Braga{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <h2>Componentes</h2>
+        <p>Cadastre os materiais utilizados nos orçamentos.</p>
+    </div>
+
+    <div class="page-actions">
+        <a class="button button-secondary" href="{{ url_for('main.inactive_components') }}">
+            Componentes desativados
+        </a>
+        <a class="button button-secondary" href="{{ url_for('main.index') }}">
+            Voltar ao início
+        </a>
+    </div>
+</section>
+
+{% if
+    request.args.get("saved") == "1"
+    or request.args.get("updated") == "1"
+    or request.args.get("deactivated") == "1"
+    or request.args.get("reactivated") == "1"
+%}
+    <div class="save-toast" role="status" aria-live="polite">
+        <span class="save-toast-icon">&#10003;</span>
+        <span>
+            {% if request.args.get("saved") == "1" %}
+                Componente salvo
+            {% elif request.args.get("updated") == "1" %}
+                Componente atualizado
+            {% elif request.args.get("deactivated") == "1" %}
+                Componente desativado
+            {% else %}
+                Componente reativado
+            {% endif %}
+        </span>
+    </div>
+{% endif %}
+
+<section class="card">
+    <h3>Novo componente</h3>
+
+    {% if error %}
+        <p class="alert alert-error">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" class="form-grid">
+        <label class="field">
+            <span>Nome do componente *</span>
+            <input
+                type="text"
+                name="name"
+                value="{{ request.form.get('name', '') }}"
+                placeholder="Ex.: Roldana"
+                required
+                autofocus
+            >
+        </label>
+
+        <label class="field">
+            <span>Valor unitário *</span>
+            <input
+                type="text"
+                name="unit_price"
+                value="{{ request.form.get('unit_price', '') }}"
+                placeholder="Ex.: 4,50"
+                inputmode="decimal"
+                required
+            >
+        </label>
+
+        <div class="form-actions field-full">
+            <button type="submit">Cadastrar componente</button>
+        </div>
+    </form>
+</section>
+
+<section class="card">
+    <div class="section-heading">
+        <h3>Componentes cadastrados ativos</h3>
+        <span class="count-badge">{{ total_count }}</span>
+    </div>
+
+    <form method="get" class="listing-search">
+        <label class="field listing-search-field">
+            <span>Pesquisar componentes ativos</span>
+            <input
+                type="search"
+                name="q"
+                value="{{ search }}"
+                placeholder="Digite o nome do componente"
+            >
+        </label>
+
+        <div class="listing-search-actions">
+            {% if search %}
+                <a class="button button-secondary" href="{{ url_for('main.components') }}">
+                    Limpar
+                </a>
+            {% endif %}
+            <button type="submit">Pesquisar</button>
+        </div>
+    </form>
+
+    {% if components %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Componente</th>
+                        <th>Valor unitário</th>
+                        <th>Situação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for component in components %}
+                        <tr>
+                            <td><strong>{{ component["name"] }}</strong></td>
+                            <td>{{ component["unit_price_cents"]|brl }}</td>
+                            <td>
+                                <span class="component-status active">
+                                    Ativo
+                                </span>
+                            </td>
+                            <td>
+                                <div class="table-actions">
+                                    <a
+                                        class="table-action"
+                                        href="{{ url_for('main.edit_component', component_id=component['id']) }}"
+                                    >
+                                        Editar
+                                    </a>
+
+                                    <form
+                                        method="post"
+                                        action="{{ url_for('main.deactivate_component', component_id=component['id']) }}"
+                                        class="inline-form deactivate-form"
+                                        data-client-name="{{ component['name'] }}"
+                                    >
+                                        <button
+                                            class="table-action table-action-danger"
+                                            type="submit"
+                                        >
+                                            Desativar
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">
+            {% if search %}
+                Nenhum componente ativo encontrado para “{{ search }}”.
+            {% else %}
+                Nenhum componente ativo cadastrado ainda.
+            {% endif %}
+        </p>
+    {% endif %}
+
+    {% if total_pages > 1 %}
+        <nav class="pagination" aria-label="Paginação dos componentes ativos">
+            {% if page > 1 %}
+                <a
+                    class="pagination-link"
+                    href="{{ url_for('main.components', q=search, page=page - 1) }}"
+                >
+                    Anterior
+                </a>
+            {% else %}
+                <span class="pagination-link is-disabled">Anterior</span>
+            {% endif %}
+
+            <span class="pagination-status">Página {{ page }} de {{ total_pages }}</span>
+
+            {% if page < total_pages %}
+                <a
+                    class="pagination-link"
+                    href="{{ url_for('main.components', q=search, page=page + 1) }}"
+                >
+                    Próxima
+                </a>
+            {% else %}
+                <span class="pagination-link is-disabled">Próxima</span>
+            {% endif %}
+        </nav>
+    {% endif %}
+</section>
+
+<div class="modal-backdrop" id="deactivate-modal" hidden>
+    <section
+        class="confirmation-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deactivate-modal-title"
+    >
+        <div class="modal-warning" aria-hidden="true">!</div>
+
+        <h3 id="deactivate-modal-title">Desativar componente?</h3>
+
+        <p>
+            Tem certeza de que deseja desativar
+            <strong id="deactivate-client-name"></strong>?
+        </p>
+
+        <p class="modal-note">
+            Ele deixará de aparecer nas opções dos novos orçamentos.
+        </p>
+
+        <div class="modal-actions">
+            <button
+                class="button button-secondary"
+                id="cancel-deactivation"
+                type="button"
+            >
+                Cancelar
+            </button>
+
+            <button
+                class="button button-danger"
+                id="confirm-deactivation"
+                type="button"
+            >
+                Desativar componente
+            </button>
+        </div>
+    </section>
+</div>
+{% endblock %}

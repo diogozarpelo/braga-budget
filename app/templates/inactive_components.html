@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Componentes desativados | Vidraçaria Braga{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Cadastros</p>
+        <h2>Componentes desativados</h2>
+        <p>Consulte e reative componentes removidos da lista principal.</p>
+    </div>
+
+    <a class="button button-secondary" href="{{ url_for('main.components') }}">
+        Voltar aos componentes
+    </a>
+</section>
+
+{% if request.args.get("reactivated") == "1" %}
+    <div class="save-toast" role="status" aria-live="polite">
+        <span class="save-toast-icon">&#10003;</span>
+        <span>Componente reativado</span>
+    </div>
+{% endif %}
+
+<section class="card">
+    <div class="section-heading">
+        <h3>Componentes desativados</h3>
+        <span class="count-badge">{{ total_count }}</span>
+    </div>
+
+    <form method="get" class="listing-search">
+        <label class="field listing-search-field">
+            <span>Pesquisar componentes desativados</span>
+            <input
+                type="search"
+                name="q"
+                value="{{ search }}"
+                placeholder="Digite o nome do componente"
+            >
+        </label>
+
+        <div class="listing-search-actions">
+            {% if search %}
+                <a
+                    class="button button-secondary"
+                    href="{{ url_for('main.inactive_components') }}"
+                >
+                    Limpar
+                </a>
+            {% endif %}
+            <button type="submit">Pesquisar</button>
+        </div>
+    </form>
+
+    {% if components %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Componente</th>
+                        <th>Valor unitário</th>
+                        <th>Situação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for component in components %}
+                        <tr class="inactive-row">
+                            <td><strong>{{ component["name"] }}</strong></td>
+                            <td>{{ component["unit_price_cents"]|brl }}</td>
+                            <td>
+                                <span class="component-status inactive">
+                                    Inativo
+                                </span>
+                            </td>
+                            <td>
+                                <form
+                                    method="post"
+                                    action="{{ url_for('main.reactivate_component', component_id=component['id']) }}"
+                                    class="inline-form reactivate-form"
+                                    data-component-name="{{ component['name'] }}"
+                                >
+                                    <button
+                                        class="table-action table-action-success"
+                                        type="submit"
+                                    >
+                                        Reativar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">
+            {% if search %}
+                Nenhum componente desativado encontrado para “{{ search }}”.
+            {% else %}
+                Nenhum componente desativado.
+            {% endif %}
+        </p>
+    {% endif %}
+
+    {% if total_pages > 1 %}
+        <nav class="pagination" aria-label="Paginação dos componentes desativados">
+            {% if page > 1 %}
+                <a
+                    class="pagination-link"
+                    href="{{ url_for('main.inactive_components', q=search, page=page - 1) }}"
+                >
+                    Anterior
+                </a>
+            {% else %}
+                <span class="pagination-link is-disabled">Anterior</span>
+            {% endif %}
+
+            <span class="pagination-status">Página {{ page }} de {{ total_pages }}</span>
+
+            {% if page < total_pages %}
+                <a
+                    class="pagination-link"
+                    href="{{ url_for('main.inactive_components', q=search, page=page + 1) }}"
+                >
+                    Próxima
+                </a>
+            {% else %}
+                <span class="pagination-link is-disabled">Próxima</span>
+            {% endif %}
+        </nav>
+    {% endif %}
+</section>
+
+<div class="modal-backdrop" id="reactivate-modal" hidden>
+    <section
+        class="confirmation-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reactivate-modal-title"
+    >
+        <div class="modal-warning modal-warning-success" aria-hidden="true">!</div>
+
+        <h3 id="reactivate-modal-title">Reativar componente?</h3>
+
+        <p>
+            Tem certeza de que deseja reativar
+            <strong id="reactivate-component-name"></strong>?
+        </p>
+
+        <p class="modal-note">
+            Ele voltará a aparecer na lista de componentes ativos.
+        </p>
+
+        <div class="modal-actions">
+            <button
+                class="button button-secondary"
+                id="cancel-reactivation"
+                type="button"
+            >
+                Cancelar
+            </button>
+            <button
+                class="button button-success"
+                id="confirm-reactivation"
+                type="button"
+            >
+                Reativar componente
+            </button>
+        </div>
+    </section>
+</div>
+{% endblock %}
