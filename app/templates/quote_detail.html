@@ -139,11 +139,6 @@
     </div>
 
     {% if items %}
-        {% set category_labels = {
-            "kit": "Kit de instalação",
-            "accessory": "Acessório",
-            "other": "Outro material"
-        } %}
 
         <div class="quote-items-list">
             {% for item in items %}
@@ -262,9 +257,6 @@
                                 {% for component in components_by_item[item["id"]] %}
                                     <div class="component-entry">
                                         <div class="component-info">
-                                            <span class="component-category">
-                                                {{ category_labels[component["category"]] }}
-                                            </span>
                                             <strong>{{ component["description"] }}</strong>
                                         </div>
 

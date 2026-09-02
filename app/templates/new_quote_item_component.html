@@ -24,68 +24,166 @@
     {% endif %}
 
     <form method="post" class="form-grid" id="component-form" data-item-width-mm="{{ item['width_mm'] }}" data-item-quantity="{{ item['item_quantity'] }}" autocomplete="off">
+        <div id="component-rows" class="component-rows">
+            {% for row in component_rows %}
+                <div class="component-row">
+                    <label class="field">
+                        <span>Componente *</span>
 
-        <label class="field">
-            <span>Componente *</span>
-            <select name="description" id="component-description" required>
-                <option value="">Selecione um componente</option>
-                {% for component in available_components %}
-                    <option
-                        value="{{ component['name'] }}"
-                        data-price="{{ '%.2f'|format(component['unit_price_cents'] / 100) }}"
-                        {% if request.form.get('description') == component['name'] %}selected{% endif %}
-                    >
-                        {{ component['name'] }}
-                    </option>
-                {% endfor %}
-            </select>
-        </label>
+                        <select
+                            name="description"
+                            class="component-description"
+                            required
+                        >
+                            <option value="">Selecione um componente</option>
 
-        <label class="field">
-            <span>Quantidade *</span>
-            <input
-                type="number"
-                name="quantity"
-                value="{{ request.form.get('quantity', '1') }}"
-                min="1"
-                step="1"
-                required
-            >
-        </label>
+                            {% for component in available_components %}
+                                <option
+                                    value="{{ component['name'] }}"
+                                    data-price="{{ '%.2f'|format(component['unit_price_cents'] / 100) }}"
+                                    {% if row['description'] == component['name'] %}selected{% endif %}
+                                >
+                                    {{ component['name'] }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </label>
 
-        <label class="field">
-            <span>Valor unitário *</span>
-            <input
-                type="text"
-                name="unit_price"
-                value="{{ request.form.get('unit_price', '') }}"
-                placeholder="Ex.: 350,00"
-                inputmode="decimal"
-                required
-            >
-        </label>
+                    <label class="field">
+                        <span>Quantidade *</span>
 
-        <div class="field">
-            <span>Valor total do componente</span>
-            <output class="calculated-value" id="component-total">R$ 0,00</output>
+                        <input
+                            type="number"
+                            name="quantity"
+                            value="{{ row['quantity'] }}"
+                            min="1"
+                            step="1"
+                            required
+                        >
+                    </label>
+
+                    <label class="field">
+                        <span>Valor unit&aacute;rio *</span>
+
+                        <input
+                            type="text"
+                            name="unit_price"
+                            value="{{ row['unit_price'] }}"
+                            inputmode="decimal"
+                            required
+                        >
+                    </label>
+
+                    <div class="field">
+                        <span>Valor total do componente</span>
+
+                        <output class="calculated-value component-total">
+                            R$ 0,00
+                        </output>
+                    </div>
+
+                    <div class="component-row-actions">
+                        <button
+                            type="button"
+                            class="button button-secondary remove-component"
+                        >
+                            Remover
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
 
-        <div class="component-help field-full">
+        <template id="component-row-template">
+            <div class="component-row">
+                <label class="field">
+                    <span>Componente *</span>
 
-            <div class="info-box">
-                O total será calculado pela quantidade × valor unitário.
+                    <select
+                        name="description"
+                        class="component-description"
+                        required
+                    >
+                        <option value="">Selecione um componente</option>
+
+                        {% for component in available_components %}
+                            <option
+                                value="{{ component['name'] }}"
+                                data-price="{{ '%.2f'|format(component['unit_price_cents'] / 100) }}"
+                            >
+                                {{ component['name'] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label class="field">
+                    <span>Quantidade *</span>
+
+                    <input
+                        type="number"
+                        name="quantity"
+                        value="1"
+                        min="1"
+                        step="1"
+                        required
+                    >
+                </label>
+
+                <label class="field">
+                    <span>Valor unit&aacute;rio *</span>
+
+                    <input
+                        type="text"
+                        name="unit_price"
+                        inputmode="decimal"
+                        required
+                    >
+                </label>
+
+                <div class="field">
+                    <span>Valor total do componente</span>
+
+                    <output class="calculated-value component-total">
+                        R$ 0,00
+                    </output>
+                </div>
+
+                <div class="component-row-actions">
+                    <button
+                        type="button"
+                        class="button button-secondary remove-component"
+                    >
+                        Remover
+                    </button>
+                </div>
             </div>
+        </template>
+
+        <div class="component-add-action">
+            <button
+                type="button"
+                class="button"
+                id="add-component-row"
+            >
+                Adicionar novo componente
+            </button>
         </div>
 
         <div class="form-actions field-full">
             <a
                 class="button button-secondary"
-                href="{{ url_for('main.quote_detail', quote_id=item['quote_id']) }}"
+                href="{{ url_for(
+                    'main.quote_detail',
+                    quote_id=item['quote_id']
+                ) }}#quote-items"
             >
                 Cancelar
             </a>
 
-            <button type="submit">Salvar componente</button>
+            <button type="submit">
+                Salvar componentes
+            </button>
         </div>
     </form>
 </section>

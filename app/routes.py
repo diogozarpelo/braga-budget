@@ -817,6 +817,7 @@ def format_brl(cents):
 )
 def new_quote_item_component(quote_id, item_id):
     db = get_db()
+
     item = db.execute(
         """
         SELECT
@@ -841,28 +842,101 @@ def new_quote_item_component(quote_id, item_id):
     if item["status"] != "draft":
         abort(400)
 
+    available_components = db.execute(
+        """
+        SELECT id, name, unit_price_cents
+        FROM components
+        WHERE active = 1
+        ORDER BY name COLLATE NOCASE
+        """
+    ).fetchall()
+
+    existing_components = db.execute(
+        """
+        SELECT id, description, quantity, unit_price_cents
+        FROM quote_item_components
+        WHERE quote_item_id = ?
+        ORDER BY id
+        """,
+        (item_id,),
+    ).fetchall()
+
     error = None
+    component_rows = []
 
     if request.method == "POST":
-        category = "other"
-        description = request.form.get("description", "").strip()
+        descriptions = request.form.getlist("description")
+        quantities = request.form.getlist("quantity")
+        unit_prices = request.form.getlist("unit_price")
 
-        try:
-            quantity = int(request.form.get("quantity", ""))
-            unit_price_cents = money_to_cents(
-                request.form.get("unit_price", "")
-            )
-        except (ValueError, InvalidOperation):
-            error = "Preencha corretamente a quantidade e o valor."
-        if error is None and not description:
-            error = "Informe a descrição do componente."
-        elif error is None and quantity <= 0:
-            error = "A quantidade deve ser maior que zero."
-        elif error is None and unit_price_cents <= 0:
-            error = "O valor unitário deve ser maior que zero."
+        if not (
+            len(descriptions)
+            == len(quantities)
+            == len(unit_prices)
+        ):
+            error = "Os dados dos componentes estao incompletos."
 
         if error is None:
+            for description, quantity_raw, unit_price_raw in zip(
+                descriptions,
+                quantities,
+                unit_prices,
+            ):
+                description = description.strip()
+
+                component_rows.append(
+                    {
+                        "description": description,
+                        "quantity": quantity_raw,
+                        "unit_price": unit_price_raw,
+                    }
+                )
+
+                try:
+                    quantity = int(quantity_raw)
+                    unit_price_cents = money_to_cents(unit_price_raw)
+                except (ValueError, InvalidOperation):
+                    error = "Preencha corretamente quantidade e valor."
+                    break
+
+                if not description:
+                    error = "Selecione um componente."
+                    break
+
+                if quantity <= 0:
+                    error = "A quantidade deve ser maior que zero."
+                    break
+
+                if unit_price_cents <= 0:
+                    error = "O valor unitario deve ser maior que zero."
+                    break
+
+        if error is None and not component_rows:
+            error = "Adicione pelo menos um componente."
+
+        if error is None:
+            rows_to_save = []
+
+            for row in component_rows:
+                rows_to_save.append(
+                    (
+                        item_id,
+                        "other",
+                        row["description"],
+                        int(row["quantity"]),
+                        money_to_cents(row["unit_price"]),
+                    )
+                )
+
             db.execute(
+                """
+                DELETE FROM quote_item_components
+                WHERE quote_item_id = ?
+                """,
+                (item_id,),
+            )
+
+            db.executemany(
                 """
                 INSERT INTO quote_item_components (
                     quote_item_id,
@@ -873,36 +947,48 @@ def new_quote_item_component(quote_id, item_id):
                 )
                 VALUES (?, ?, ?, ?, ?)
                 """,
-                (
-                    item_id,
-                    category,
-                    description,
-                    quantity,
-                    unit_price_cents,
-                ),
+                rows_to_save,
             )
+
             db.commit()
 
             return redirect(
-                url_for("main.quote_detail", quote_id=quote_id, _anchor="quote-items")
+                url_for(
+                    "main.quote_detail",
+                    quote_id=quote_id,
+                    _anchor="quote-items",
+                )
             )
 
-    available_components = db.execute(
-        """
-        SELECT id, name, unit_price_cents
-        FROM components
-        WHERE active = 1
-        ORDER BY name COLLATE NOCASE
-        """
-    ).fetchall()
+    else:
+        for component in existing_components:
+            component_rows.append(
+                {
+                    "description": component["description"],
+                    "quantity": str(component["quantity"]),
+                    "unit_price": (
+                        f"{component['unit_price_cents'] / 100:.2f}"
+                        .replace(".", ",")
+                    ),
+                }
+            )
+
+    if not component_rows:
+        component_rows = [
+            {
+                "description": "",
+                "quantity": "1",
+                "unit_price": "",
+            }
+        ]
 
     return render_template(
         "new_quote_item_component.html",
         item=item,
         available_components=available_components,
+        component_rows=component_rows,
         error=error,
     )
-
 
 
 def percentage_of_cents(base_cents, percentage):

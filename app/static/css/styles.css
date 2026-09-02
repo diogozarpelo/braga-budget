@@ -1564,7 +1564,6 @@ body.modal-open {
 
 #component-total {
     display: flex;
-    width: 100%;
     min-height: 46px;
     align-items: center;
     padding: 12px;
@@ -1574,4 +1573,176 @@ body.modal-open {
     font-size: 16px;
     font-weight: bold;
     box-sizing: border-box;
+    margin-left: 0;
+}
+
+
+/* Multiple quote components */
+.component-rows {
+    display: grid;
+    gap: 20px;
+}
+
+.component-row {
+    display: grid;
+    grid-template-columns: 2fr 0.7fr 1fr 1.2fr auto;
+    gap: 16px;
+    align-items: end;
+    padding: 18px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-surface);
+}
+
+.component-row .field {
+    margin: 0;
+}
+
+.component-total {
+    display: flex;
+    width: 100%;
+    min-height: 46px;
+    align-items: center;
+    margin-left: 0;
+    padding: 12px;
+    border: 1px solid var(--color-primary);
+    border-radius: 8px;
+    background: var(--color-surface);
+    font-size: 16px;
+    font-weight: bold;
+    box-sizing: border-box;
+}
+
+.remove-component {
+    min-height: 46px;
+}
+
+.component-add-action {
+    margin-top: 18px;
+}
+
+@media (max-width: 900px) {
+    .component-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .remove-component {
+        width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .component-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* Multiple components classic layout */
+.component-rows {
+    display: grid;
+    gap: 28px;
+}
+
+.component-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    align-items: end;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.component-row + .component-row {
+    padding-top: 24px;
+    border-top: 1px solid var(--color-border);
+}
+
+.component-row .field {
+    margin: 0;
+}
+
+.component-total {
+    display: flex;
+    width: auto;
+    min-height: 46px;
+    align-items: center;
+    margin-left: 0;
+    padding: 12px;
+    border: 1px solid var(--color-primary);
+    border-radius: 8px;
+    background: var(--color-surface);
+    font-size: 16px;
+    font-weight: bold;
+    box-sizing: border-box;
+}
+
+.remove-component {
+    width: max-content;
+}
+
+.component-add-action {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+
+#add-component-row {
+    width: 46px;
+    min-width: 46px;
+    height: 46px;
+    padding: 0;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+@media (max-width: 600px) {
+    .component-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* Inline component actions */
+.component-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.component-row-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.component-add-action {
+    display: none;
+}
+
+#add-component-row {
+    width: auto;
+    min-width: 0;
+    height: 46px;
+    padding: 0 16px;
+    border-color: var(--color-primary);
+    color: #fff;
+    background: var(--color-primary);
+    font-size: 15px;
+    font-weight: bold;
+}
+
+#add-component-row:hover {
+    background: var(--color-primary-dark);
+}
+
+
+.component-rows {
+    grid-column: 1 / -1;
+    width: 100%;
+}
+
+.component-row {
+    width: 100%;
 }

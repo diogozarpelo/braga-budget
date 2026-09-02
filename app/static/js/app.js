@@ -247,66 +247,132 @@ if (
 }
 
 const componentForm = document.querySelector("#component-form");
-const componentDescription = document.querySelector("#component-description");
-const componentUnitPrice = componentForm?.querySelector(
-    'input[name="unit_price"]'
-);
+const componentRows = document.querySelector("#component-rows");
+const addComponentRow = document.querySelector("#add-component-row");
+const componentRowTemplate = document.querySelector("#component-row-template");
 
-function updateComponentPrice() {
-    if (!componentDescription || !componentUnitPrice) {
-        return;
+function parseComponentMoney(value) {
+    if (!value) {
+        return 0;
     }
 
-    const option =
-        componentDescription.options[componentDescription.selectedIndex];
-
-    if (!option || !option.dataset.price) {
-        componentUnitPrice.value = "";
-        return;
-    }
-
-    componentUnitPrice.value = option.dataset.price.replace(".", ",");
+    return Number.parseFloat(
+        value.replace(/\./g, "").replace(",", ".")
+    ) || 0;
 }
 
-if (componentDescription) {
-    componentDescription.addEventListener("change", updateComponentPrice);
-}
+function updateComponentRowTotal(row) {
+    const quantityInput = row.querySelector('input[name="quantity"]');
+    const priceInput = row.querySelector('input[name="unit_price"]');
+    const totalOutput = row.querySelector(".component-total");
 
-const componentQuantity = componentForm?.querySelector(
-    'input[name="quantity"]'
-);
-const componentTotal = document.querySelector("#component-total");
-
-function updateComponentTotal() {
-    if (!componentQuantity || !componentUnitPrice || !componentTotal) {
+    if (!quantityInput || !priceInput || !totalOutput) {
         return;
     }
 
-    const quantity = Number.parseFloat(componentQuantity.value) || 0;
-    const unitPrice =
-        Number.parseFloat(componentUnitPrice.value.replace(",", ".")) || 0;
-
+    const quantity = Number.parseFloat(quantityInput.value) || 0;
+    const unitPrice = parseComponentMoney(priceInput.value);
     const total = quantity * unitPrice;
 
-    componentTotal.textContent = total.toLocaleString("pt-BR", {
+    totalOutput.textContent = total.toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL",
     });
 }
 
-if (componentDescription) {
-    componentDescription.addEventListener("change", updateComponentTotal);
+function setupComponentRow(row) {
+    const select = row.querySelector(".component-description");
+    const quantityInput = row.querySelector('input[name="quantity"]');
+    const priceInput = row.querySelector('input[name="unit_price"]');
+    const removeButton = row.querySelector(".remove-component");
+
+    if (select && priceInput) {
+        select.addEventListener("change", () => {
+            const option = select.options[select.selectedIndex];
+
+            if (option && option.dataset.price) {
+                priceInput.value = option.dataset.price.replace(".", ",");
+            } else {
+                priceInput.value = "";
+            }
+
+            updateComponentRowTotal(row);
+        });
+    }
+
+    if (quantityInput) {
+        quantityInput.addEventListener("input", () => {
+            updateComponentRowTotal(row);
+        });
+    }
+
+    if (priceInput) {
+        priceInput.addEventListener("input", () => {
+            updateComponentRowTotal(row);
+        });
+    }
+
+    if (removeButton) {
+        removeButton.addEventListener("click", () => {
+            const rows = componentRows.querySelectorAll(".component-row");
+
+            if (rows.length <= 1) {
+                select.value = "";
+                quantityInput.value = "1";
+                priceInput.value = "";
+                updateComponentRowTotal(row);
+                return;
+            }
+
+            row.remove();
+            moveAddButtonToLastRow();
+        });
+    }
+
+    updateComponentRowTotal(row);
 }
 
-if (componentQuantity) {
-    componentQuantity.addEventListener("input", updateComponentTotal);
+function moveAddButtonToLastRow() {
+    if (!componentRows || !addComponentRow) {
+        return;
+    }
+
+    const rows = componentRows.querySelectorAll(".component-row");
+
+    if (!rows.length) {
+        return;
+    }
+
+    const lastRow = rows[rows.length - 1];
+    const actions = lastRow.querySelector(".component-row-actions");
+
+    if (actions) {
+        actions.appendChild(addComponentRow);
+    }
 }
 
-if (componentUnitPrice) {
-    componentUnitPrice.addEventListener("input", updateComponentTotal);
+if (componentRows) {
+    componentRows
+        .querySelectorAll(".component-row")
+        .forEach(setupComponentRow);
 }
 
-updateComponentTotal();
+if (addComponentRow && componentRowTemplate && componentRows) {
+    addComponentRow.addEventListener("click", () => {
+        const fragment = componentRowTemplate.content.cloneNode(true);
+        const row = fragment.querySelector(".component-row");
+
+        componentRows.appendChild(fragment);
+
+        if (row) {
+            setupComponentRow(row);
+        }
+
+        moveAddButtonToLastRow();
+    });
+}
+
+moveAddButtonToLastRow();
 
 
 function formatCnpj(value) {
