@@ -33,7 +33,21 @@
         </span>
     </div>
 
-    <a class="button button-secondary" href="{{ url_for('main.quotes') }}">Voltar aos orçamentos</a>
+    <div class="page-actions">
+        <a
+            class="button button-secondary"
+            href="{{ url_for('main.index') }}"
+        >
+            Voltar ao in&iacute;cio
+        </a>
+
+        <a
+            class="button button-secondary"
+            href="{{ url_for('main.quotes') }}"
+        >
+            Voltar aos or&ccedil;amentos
+        </a>
+    </div>
 </section>
 
 {% if not quote["quote_number"] %}
@@ -314,7 +328,7 @@
             {% endfor %}
         </div>
 
-        <div class="quote-summary-layout">
+        <div class="quote-summary-layout{% if quote["status"] == "draft" %} quote-summary-layout-draft{% endif %}">
             {% if quote["status"] != "draft" %}
                 <aside class="quote-export-panel">
                     <p class="eyebrow">Exporta&ccedil;&atilde;o</p>

@@ -2171,3 +2171,15 @@ body.modal-open {
 .quote-status-actions .table-action {
     white-space: nowrap;
 }
+
+
+/* Draft summary alignment */
+.quote-summary-layout-draft .quote-summary {
+    grid-column: 2;
+}
+
+@media (max-width: 850px) {
+    .quote-summary-layout-draft .quote-summary {
+        grid-column: 1;
+    }
+}
