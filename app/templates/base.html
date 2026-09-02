@@ -9,14 +9,18 @@
 <body>
     <header class="topbar">
         <div class="topbar-content">
-            <h1>
+            <h1 class="topbar-brand">
                 <a
                     class="topbar-home"
                     href="{{ url_for('main.index') }}"
-                    aria-label="Voltar ao início"
-                    title="Voltar ao início"
+                    aria-label="Voltar ao in?cio"
+                    title="Voltar ao in?cio"
                 >
-                    Vidraçaria Braga
+                    <img
+                        src="{{ url_for('static', filename='images/logo-semfundo-braga.png') }}"
+                        alt="Vidra?aria Braga"
+                        class="topbar-logo"
+                    >
                 </a>
             </h1>
 

@@ -2183,3 +2183,39 @@ body.modal-open {
         grid-column: 1;
     }
 }
+
+
+/* Header logo final sizing */
+.topbar-logo {
+    height: 48px;
+}
+
+@media (max-width: 700px) {
+    .topbar-logo {
+        height: 40px;
+    }
+}
+
+
+/* Header logo medium sizing */
+.topbar-logo {
+    height: 60px;
+}
+
+@media (max-width: 700px) {
+    .topbar-logo {
+        height: 48px;
+    }
+}
+
+
+/* Header logo large sizing */
+.topbar-logo {
+    height: 120px;
+}
+
+@media (max-width: 700px) {
+    .topbar-logo {
+        height: 96px;
+    }
+}
