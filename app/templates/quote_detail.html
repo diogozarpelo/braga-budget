@@ -339,7 +339,10 @@
                     </p>
 
                     <div class="quote-export-actions">
-                        <button type="button" class="button export-button">
+                        <a
+                            class="button export-button"
+                            href="{{ url_for('main.export_quote_pdf', quote_id=quote['id']) }}"
+                        >
                             <svg
                                 class="export-real-icon"
                                 viewBox="0 0 24 24"
@@ -352,7 +355,7 @@
                             </svg>
 
                             <span>Exportar PDF</span>
-                        </button>
+                        </a>
 
                         <button type="button" class="button export-button">
                             <svg

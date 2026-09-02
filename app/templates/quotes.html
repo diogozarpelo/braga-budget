@@ -161,6 +161,7 @@
                                         type="button"
                                         class="table-action export-quote-button"
                                         data-quote-id="{{ quote['id'] }}"
+                                        data-pdf-url="{{ url_for('main.export_quote_pdf', quote_id=quote['id']) }}"
                                     >
                                         Exportar
                                     </button>

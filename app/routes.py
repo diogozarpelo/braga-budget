@@ -1,6 +1,28 @@
+from html import escape
+from pathlib import Path
+from io import BytesIO
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
-from flask import Blueprint, abort, redirect, render_template, request, url_for
+from flask import Blueprint, abort, redirect, render_template, request, send_file, url_for
+
+
+from reportlab.lib import colors
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.platypus import (
+    Image,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
+
+from reportlab.platypus import KeepTogether
 
 from app.db import get_db
 
@@ -681,6 +703,770 @@ def quote_detail(quote_id):
 
 
 
+
+
+
+@main.get("/orcamentos/<int:quote_id>/exportar/pdf")
+def export_quote_pdf(quote_id):
+    db = get_db()
+
+    quote = db.execute(
+        """
+        SELECT
+            quotes.*,
+            clients.name AS client_name,
+            clients.phone AS client_phone,
+            clients.address AS client_address
+        FROM quotes
+        JOIN clients ON clients.id = quotes.client_id
+        WHERE quotes.id = ?
+        """,
+        (quote_id,),
+    ).fetchone()
+
+    if quote is None:
+        abort(404)
+
+    if quote["status"] == "draft":
+        abort(400)
+
+    business = db.execute(
+        """
+        SELECT business_name, phone, cnpj, warranty_text
+        FROM settings
+        WHERE id = 1
+        """
+    ).fetchone()
+
+    items = db.execute(
+        """
+        SELECT
+            id,
+            service_type,
+            description,
+            quantity,
+            width_mm,
+            height_mm,
+            exact_area_m2,
+            charged_area_m2,
+            glass_type,
+            thickness_mm,
+            glass_color,
+            finish,
+            glass_price_per_m2_cents,
+            CAST(
+                ROUND(
+                    charged_area_m2
+                    * quantity
+                    * glass_price_per_m2_cents
+                )
+                AS INTEGER
+            ) AS glass_total_cents
+        FROM quote_items
+        WHERE quote_id = ?
+        ORDER BY position, id
+        """,
+        (quote_id,),
+    ).fetchall()
+
+    components = db.execute(
+        """
+        SELECT
+            quote_item_components.quote_item_id,
+            quote_item_components.description,
+            quote_item_components.quantity,
+            quote_item_components.unit_price_cents,
+            (
+                quote_item_components.quantity
+                * quote_item_components.unit_price_cents
+            ) AS total_cents
+        FROM quote_item_components
+        JOIN quote_items
+            ON quote_items.id = quote_item_components.quote_item_id
+        WHERE quote_items.quote_id = ?
+        ORDER BY
+            quote_item_components.position,
+            quote_item_components.id
+        """,
+        (quote_id,),
+    ).fetchall()
+
+    components_by_item = {
+        item["id"]: []
+        for item in items
+    }
+
+    for component in components:
+        components_by_item[component["quote_item_id"]].append(component)
+
+    glass_subtotal_cents = sum(
+        item["glass_total_cents"]
+        for item in items
+    )
+
+    components_subtotal_cents = sum(
+        component["total_cents"]
+        for component in components
+    )
+
+    materials_subtotal_cents = (
+        glass_subtotal_cents
+        + components_subtotal_cents
+    )
+
+    price_breakdown = calculate_price_breakdown(
+        materials_subtotal_cents,
+        quote,
+    )
+
+    calculated_total_cents = price_breakdown[
+        "calculated_total_cents"
+    ]
+
+    display_total_cents = (
+        quote["manual_total_cents"]
+        if quote["manual_total_cents"] is not None
+        else calculated_total_cents
+    )
+
+    def brl(cents):
+        value = cents / 100
+        formatted = f"{value:,.2f}"
+        formatted = (
+            formatted
+            .replace(",", "X")
+            .replace(".", ",")
+            .replace("X", ".")
+        )
+        return f"R$ {formatted}"
+
+    def safe(value, fallback=""):
+        if value is None or str(value).strip() == "":
+            value = fallback
+
+        return escape(str(value))
+
+    # --------------------------------------------------------
+    # Fonte Unicode
+    # --------------------------------------------------------
+
+    font_regular = "Helvetica"
+    font_bold = "Helvetica-Bold"
+
+    arial_regular = Path("C:/Windows/Fonts/arial.ttf")
+    arial_bold = Path("C:/Windows/Fonts/arialbd.ttf")
+
+    if arial_regular.exists() and arial_bold.exists():
+        if "BragaArial" not in pdfmetrics.getRegisteredFontNames():
+            pdfmetrics.registerFont(
+                TTFont("BragaArial", str(arial_regular))
+            )
+
+        if "BragaArialBold" not in pdfmetrics.getRegisteredFontNames():
+            pdfmetrics.registerFont(
+                TTFont("BragaArialBold", str(arial_bold))
+            )
+
+        font_regular = "BragaArial"
+        font_bold = "BragaArialBold"
+
+    buffer = BytesIO()
+
+    document = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=12 * mm,
+        leftMargin=12 * mm,
+        topMargin=11 * mm,
+        bottomMargin=11 * mm,
+        title=f"Orcamento {quote['quote_number']}",
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "BragaTitle",
+        parent=styles["Heading1"],
+        fontName=font_bold,
+        fontSize=17,
+        leading=20,
+        textColor=colors.HexColor("#7A2028"),
+        spaceBefore=2,
+        spaceAfter=7,
+    )
+
+    section_style = ParagraphStyle(
+        "BragaSection",
+        parent=styles["Heading2"],
+        fontName=font_bold,
+        fontSize=11,
+        leading=13,
+        textColor=colors.HexColor("#7A2028"),
+        spaceBefore=13,
+        spaceAfter=6,
+        keepWithNext=True,
+    )
+
+    normal_style = ParagraphStyle(
+        "BragaNormal",
+        parent=styles["BodyText"],
+        fontName=font_regular,
+        fontSize=8.5,
+        leading=11,
+        spaceAfter=0,
+    )
+
+    bold_style = ParagraphStyle(
+        "BragaBold",
+        parent=normal_style,
+        fontName=font_bold,
+    )
+
+    small_style = ParagraphStyle(
+        "BragaSmall",
+        parent=normal_style,
+        fontSize=7.8,
+        leading=10,
+    )
+
+    right_style = ParagraphStyle(
+        "BragaRight",
+        parent=normal_style,
+        alignment=TA_RIGHT,
+    )
+
+    business_style = ParagraphStyle(
+        "BragaBusiness",
+        parent=normal_style,
+        alignment=TA_CENTER,
+        fontSize=9.5,
+        leading=14,
+    )
+
+    story = []
+
+    # --------------------------------------------------------
+    # Cabe?alho: logo esquerda / dados direita
+    # --------------------------------------------------------
+
+    logo_path = Path("app/static/images/logo-braga.png")
+
+    logo = ""
+
+    if logo_path.exists():
+        logo = Image(
+            str(logo_path),
+            width=32 * mm,
+            height=32 * mm,
+        )
+
+    business_name = (
+        business["business_name"]
+        if business and business["business_name"]
+        else "Vidra\u00e7aria Braga"
+    )
+
+    business_lines = [
+        f'<font name="{font_bold}" size="17" color="#7A2028"><b>{safe(business_name)}</b></font>',
+    ]
+
+    if business and business["phone"]:
+        business_lines.append(
+            f"Telefone: {safe(business['phone'])}"
+        )
+
+    if business and business["cnpj"]:
+        business_lines.append(
+            f"CNPJ: {safe(business['cnpj'])}"
+        )
+
+    header = Table(
+        [
+            [
+                logo,
+                Paragraph(
+                    "<br/>".join(business_lines),
+                    business_style,
+                ),
+                "",
+            ]
+        ],
+        colWidths=[34 * mm, 113 * mm, 34 * mm],
+    )
+
+    header.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("ALIGN", (0, 0), (0, 0), "LEFT"),
+                ("ALIGN", (1, 0), (1, 0), "CENTER"),
+                ("ALIGN", (2, 0), (2, 0), "RIGHT"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 0),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                (
+                    "LINEBELOW",
+                    (0, 0),
+                    (-1, -1),
+                    1,
+                    colors.HexColor("#7A2028"),
+                ),
+            ]
+        )
+    )
+
+    story.append(header)
+    story.append(Spacer(1, 4 * mm))
+
+    story.append(
+        Paragraph(
+            f"OR\u00c7AMENTO N\u00ba {quote['quote_number']}",
+            title_style,
+        )
+    )
+
+    # --------------------------------------------------------
+    # Cliente
+    # --------------------------------------------------------
+
+    client_data = [
+        [
+            Paragraph("Nome", bold_style),
+            Paragraph(
+                safe(quote["client_name"]),
+                normal_style,
+            ),
+        ],
+        [
+            Paragraph("Telefone", bold_style),
+            Paragraph(
+                safe(
+                    quote["client_phone"],
+                    "N\u00e3o informado",
+                ),
+                normal_style,
+            ),
+        ],
+        [
+            Paragraph("Endere\u00e7o", bold_style),
+            Paragraph(
+                safe(
+                    quote["client_address"],
+                    "N\u00e3o informado",
+                ),
+                normal_style,
+            ),
+        ],
+    ]
+
+    client_table = Table(
+        client_data,
+        colWidths=[28 * mm, 153 * mm],
+    )
+
+    client_table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                (
+                    "LINEBELOW",
+                    (0, 0),
+                    (-1, -1),
+                    0.25,
+                    colors.HexColor("#DDDDDD"),
+                ),
+            ]
+        )
+    )
+
+    story.append(
+        KeepTogether(
+            [
+                Paragraph("CLIENTE", section_style),
+                client_table,
+            ]
+        )
+    )
+
+    # --------------------------------------------------------
+    # Condi??es / observa??es / garantia
+    # Mantidas juntas para evitar subt?tulos ?rf?os.
+    # --------------------------------------------------------
+
+    conditions = [
+        [
+            Paragraph("Validade", bold_style),
+            Paragraph(
+                f"{quote['validity_days']} dias",
+                normal_style,
+            ),
+        ],
+        [
+            Paragraph(
+                "Prazo de execu\u00e7\u00e3o",
+                bold_style,
+            ),
+            Paragraph(
+                f"{quote['execution_days']} dias",
+                normal_style,
+            ),
+        ],
+        [
+            Paragraph(
+                "Formas de pagamento",
+                bold_style,
+            ),
+            Paragraph(
+                safe(
+                    quote["payment_terms"],
+                    "N\u00e3o informado",
+                ),
+                normal_style,
+            ),
+        ],
+    ]
+
+    conditions_table = Table(
+        conditions,
+        colWidths=[
+            48 * mm,
+            133 * mm,
+        ],
+    )
+
+    conditions_table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                (
+                    "LINEBELOW",
+                    (0, 0),
+                    (-1, -1),
+                    0.25,
+                    colors.HexColor("#DDDDDD"),
+                ),
+            ]
+        )
+    )
+
+    conditions_block = [
+        Paragraph(
+            "CONDI\u00c7\u00d5ES",
+            section_style,
+        ),
+        conditions_table,
+    ]
+
+    if quote["notes"]:
+        conditions_block.extend(
+            [
+                Spacer(1, 2 * mm),
+                Paragraph(
+                    "<b>Observa\u00e7\u00f5es</b>",
+                    normal_style,
+                ),
+                Paragraph(
+                    safe(quote["notes"]),
+                    normal_style,
+                ),
+            ]
+        )
+
+    warranty = (
+        quote["warranty_text"]
+        or (
+            business["warranty_text"]
+            if business
+            else None
+        )
+    )
+
+    story.append(
+        KeepTogether(conditions_block)
+    )
+
+
+    # --------------------------------------------------------
+    # Itens
+    # --------------------------------------------------------
+
+    story.append(
+        Paragraph(
+            "ITENS DO OR\u00c7AMENTO",
+            section_style,
+        )
+    )
+
+    for index, item in enumerate(items, start=1):
+        description = item["service_type"] or ""
+
+        if item["description"]:
+            description += f" - {item['description']}"
+
+        item_rows = [
+            [
+                Paragraph(
+                    f"<b>Item {index}</b>",
+                    normal_style,
+                ),
+                Paragraph(
+                    safe(description),
+                    normal_style,
+                ),
+                Paragraph(
+                    brl(item["glass_total_cents"]),
+                    right_style,
+                ),
+            ],
+            [
+                "",
+                Paragraph(
+                    (
+                        f"{item['quantity']} un. | "
+                        f"{item['width_mm']} x "
+                        f"{item['height_mm']} mm | "
+                        f"{safe(item['glass_type'])} | "
+                        f"{item['thickness_mm']} mm | "
+                        f"{safe(item['glass_color'], '-')} | "
+                        f"{safe(item['finish'], '-')}"
+                    ),
+                    small_style,
+                ),
+                "",
+            ],
+        ]
+
+        for component in components_by_item[item["id"]]:
+            item_rows.append(
+                [
+                    "",
+                    Paragraph(
+                        (
+                            f"{safe(component['description'])} - "
+                            f"{component['quantity']} x "
+                            f"{brl(component['unit_price_cents'])}"
+                        ),
+                        small_style,
+                    ),
+                    Paragraph(
+                        brl(component["total_cents"]),
+                        right_style,
+                    ),
+                ]
+            )
+
+        item_table = Table(
+            item_rows,
+            colWidths=[
+                19 * mm,
+                130 * mm,
+                32 * mm,
+            ],
+        )
+
+        item_table.setStyle(
+            TableStyle(
+                [
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    (
+                        "BACKGROUND",
+                        (0, 0),
+                        (-1, 0),
+                        colors.HexColor("#F4ECE9"),
+                    ),
+                    (
+                        "BOX",
+                        (0, 0),
+                        (-1, -1),
+                        0.5,
+                        colors.HexColor("#D8C7C2"),
+                    ),
+                    (
+                        "INNERGRID",
+                        (0, 0),
+                        (-1, -1),
+                        0.25,
+                        colors.HexColor("#E9DEDA"),
+                    ),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+                    ("TOPPADDING", (0, 0), (-1, -1), 4),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ]
+            )
+        )
+
+        story.append(
+            KeepTogether(
+                [
+                    item_table,
+                    Spacer(1, 2 * mm),
+                ]
+            )
+        )
+
+    # --------------------------------------------------------
+    # Resumo financeiro
+    # --------------------------------------------------------
+
+    totals = [
+        [
+            Paragraph("Subtotal do vidro", normal_style),
+            Paragraph(
+                brl(glass_subtotal_cents),
+                right_style,
+            ),
+        ],
+        [
+            Paragraph("Componentes", normal_style),
+            Paragraph(
+                brl(components_subtotal_cents),
+                right_style,
+            ),
+        ],
+        [
+            Paragraph("Total dos materiais", normal_style),
+            Paragraph(
+                brl(materials_subtotal_cents),
+                right_style,
+            ),
+        ],
+        [
+            Paragraph("M\u00e3o de obra", normal_style),
+            Paragraph(
+                brl(price_breakdown["labor_cents"]),
+                right_style,
+            ),
+        ],
+        [
+            Paragraph(
+                "Adicional de dificuldade",
+                normal_style,
+            ),
+            Paragraph(
+                brl(price_breakdown["difficulty_cents"]),
+                right_style,
+            ),
+        ],
+        [
+            Paragraph("Desconto", normal_style),
+            Paragraph(
+                f"- {brl(price_breakdown['discount_cents'])}",
+                right_style,
+            ),
+        ],
+        [
+            Paragraph("<b>VALOR FINAL</b>", bold_style),
+            Paragraph(
+                f'<font name="{font_bold}"><b>{brl(display_total_cents)}</b></font>',
+                right_style,
+            ),
+        ],
+    ]
+
+    totals_table = Table(
+        totals,
+        colWidths=[
+            126 * mm,
+            55 * mm,
+        ],
+    )
+
+    totals_table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+                (
+                    "BACKGROUND",
+                    (0, 0),
+                    (-1, 0),
+                    colors.HexColor("#F4ECE9"),
+                ),
+                (
+                    "BOX",
+                    (0, 0),
+                    (-1, -1),
+                    0.5,
+                    colors.HexColor("#D8C7C2"),
+                ),
+                (
+                    "INNERGRID",
+                    (0, 0),
+                    (-1, -1),
+                    0.25,
+                    colors.HexColor("#E9DEDA"),
+                ),
+                ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+                ("TOPPADDING", (0, 0), (-1, -1), 4),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                (
+                    "BACKGROUND",
+                    (0, -1),
+                    (-1, -1),
+                    colors.HexColor("#F4ECE9"),
+                ),
+                (
+                    "TEXTCOLOR",
+                    (0, -1),
+                    (-1, -1),
+                    colors.HexColor("#7A2028"),
+                ),
+                (
+                    "LINEABOVE",
+                    (0, -1),
+                    (-1, -1),
+                    1,
+                    colors.HexColor("#7A2028"),
+                ),
+            ]
+        )
+    )
+
+    story.append(
+        KeepTogether(
+            [
+                Paragraph("RESUMO", section_style),
+                totals_table,
+            ]
+        )
+    )
+
+
+    if warranty:
+        story.append(
+            KeepTogether(
+                [
+                    Paragraph(
+                        "GARANTIA",
+                        section_style,
+                    ),
+                    Paragraph(
+                        safe(warranty),
+                        normal_style,
+                    ),
+                ]
+            )
+        )
+
+    document.build(story)
+
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=(
+            f"orcamento-{quote['quote_number']}.pdf"
+        ),
+    )
 
 
 @main.route("/orcamentos/<int:quote_id>/itens/novo", methods=("GET", "POST"))
