@@ -169,6 +169,7 @@
                                 {% endif %}
                             </div>
 
+                            {% if quote["status"] == "draft" %}
                             <div class="item-actions">
                                 <a
                                     class="table-action"
@@ -212,6 +213,7 @@
                                     </button>
                                 </form>
                             </div>
+                            {% endif %}
                         </div>
 
                         <div class="quote-item-details">
@@ -282,6 +284,7 @@
                                                 = <strong>{{ component["total_cents"]|brl }}</strong>
                                             </span>
 
+                                            {% if quote["status"] == "draft" %}
                                             <a
                                                 class="component-edit"
                                                 href="{{ url_for(
@@ -314,6 +317,7 @@
                                                     Remover
                                                 </button>
                                             </form>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 {% endfor %}
