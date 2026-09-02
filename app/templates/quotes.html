@@ -60,8 +60,29 @@
 <section class="card">
     <div class="section-heading">
         <h3>Orçamentos emitidos</h3>
-        <span class="count-badge">{{ issued_quotes|length }}</span>
+        <span class="count-badge">{{ issued_total_count }}</span>
     </div>
+
+    <form method="get" class="listing-search">
+        <label class="field listing-search-field">
+            <span>Pesquisar orçamentos emitidos</span>
+            <input
+                type="search"
+                name="q"
+                value="{{ issued_search }}"
+                placeholder="Número, cliente ou telefone"
+            >
+        </label>
+
+        <div class="listing-search-actions">
+            {% if issued_search %}
+                <a class="button button-secondary" href="{{ url_for('main.quotes') }}">
+                    Limpar
+                </a>
+            {% endif %}
+            <button type="submit">Pesquisar</button>
+        </div>
+    </form>
 
     {% if issued_quotes %}
         {% set status_labels = {
@@ -110,7 +131,43 @@
             </table>
         </div>
     {% else %}
-        <p class="empty-state">Nenhum orçamento emitido ainda.</p>
+        <p class="empty-state">
+            {% if issued_search %}
+                Nenhum orçamento emitido encontrado para “{{ issued_search }}”.
+            {% else %}
+                Nenhum orçamento emitido ainda.
+            {% endif %}
+        </p>
+    {% endif %}
+
+    {% if issued_total_pages > 1 %}
+        <nav class="pagination" aria-label="Paginação dos orçamentos emitidos">
+            {% if issued_page > 1 %}
+                <a
+                    class="pagination-link"
+                    href="{{ url_for('main.quotes', q=issued_search, page=issued_page - 1) }}"
+                >
+                    Anterior
+                </a>
+            {% else %}
+                <span class="pagination-link is-disabled">Anterior</span>
+            {% endif %}
+
+            <span class="pagination-status">
+                Página {{ issued_page }} de {{ issued_total_pages }}
+            </span>
+
+            {% if issued_page < issued_total_pages %}
+                <a
+                    class="pagination-link"
+                    href="{{ url_for('main.quotes', q=issued_search, page=issued_page + 1) }}"
+                >
+                    Próxima
+                </a>
+            {% else %}
+                <span class="pagination-link is-disabled">Próxima</span>
+            {% endif %}
+        </nav>
     {% endif %}
 </section>
 {% endblock %}

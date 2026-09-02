@@ -8,6 +8,32 @@ from app.db import get_db
 main = Blueprint("main", __name__)
 
 COMPONENTS_PER_PAGE = 15
+CLIENTS_PER_PAGE = 15
+ISSUED_QUOTES_PER_PAGE = 15
+
+CLIENT_PHONE_DIGITS_SQL = """
+    REPLACE(
+        REPLACE(
+            REPLACE(
+                REPLACE(
+                    REPLACE(
+                        REPLACE(clients.phone, '(', ''),
+                        ')',
+                        ''
+                    ),
+                    '-',
+                    ''
+                ),
+                ' ',
+                ''
+            ),
+            '.',
+            ''
+        ),
+        '+',
+        ''
+    )
+"""
 
 
 def parse_decimal(value):
@@ -33,21 +59,92 @@ def money_to_cents(value):
     )
 
 
+def escape_like(value):
+    return (
+        value.replace("\\", "\\\\")
+        .replace("%", "\\%")
+        .replace("_", "\\_")
+    )
+
+
+def normalize_comparison_text(value):
+    return " ".join((value or "").split()).casefold()
+
+
+def phone_digits(value):
+    return "".join(
+        character
+        for character in (value or "")
+        if character.isdigit()
+    )
+
+
+def get_pagination(total_count, per_page):
+    page = request.args.get("page", default=1, type=int) or 1
+    page = max(page, 1)
+    total_pages = max(1, (total_count + per_page - 1) // per_page)
+    page = min(page, total_pages)
+    offset = (page - 1) * per_page
+
+    return page, total_pages, offset
+
+
+def find_duplicate_client(db, name, phone, address, exclude_client_id=None):
+    query = """
+        SELECT id, name, phone, address, active
+        FROM clients
+    """
+    query_params = []
+
+    if exclude_client_id is not None:
+        query += " WHERE id != ?"
+        query_params.append(exclude_client_id)
+
+    query += " ORDER BY active DESC, id"
+
+    normalized_name = normalize_comparison_text(name)
+    normalized_phone = phone_digits(phone)
+    normalized_address = normalize_comparison_text(address)
+
+    for client in db.execute(query, query_params).fetchall():
+        if normalize_comparison_text(client["name"]) != normalized_name:
+            continue
+
+        existing_phone = phone_digits(client["phone"])
+
+        if normalized_phone and existing_phone == normalized_phone:
+            return client
+
+        if (
+            not normalized_phone
+            and not existing_phone
+            and normalize_comparison_text(client["address"])
+            == normalized_address
+        ):
+            return client
+
+    return None
+
+
+def duplicate_client_error(duplicate):
+    if duplicate["active"]:
+        return "Já existe um cliente ativo com esses mesmos dados."
+
+    return (
+        "Este cliente já existe na lista de desativados e pode ser "
+        "reativado."
+    )
+
+
 def get_components_page(active):
     db = get_db()
     search = request.args.get("q", "").strip()
-    page = request.args.get("page", default=1, type=int) or 1
-    page = max(page, 1)
 
     where_parts = ["active = ?"]
     query_params = [active]
 
     if search:
-        escaped_search = (
-            search.replace("\\", "\\\\")
-            .replace("%", "\\%")
-            .replace("_", "\\_")
-        )
+        escaped_search = escape_like(search)
         where_parts.append("name LIKE ? ESCAPE '\\' COLLATE NOCASE")
         query_params.append(f"%{escaped_search}%")
 
@@ -56,12 +153,10 @@ def get_components_page(active):
         f"SELECT COUNT(*) FROM components WHERE {where_clause}",
         query_params,
     ).fetchone()[0]
-    total_pages = max(
-        1,
-        (total_count + COMPONENTS_PER_PAGE - 1) // COMPONENTS_PER_PAGE,
+    page, total_pages, offset = get_pagination(
+        total_count,
+        COMPONENTS_PER_PAGE,
     )
-    page = min(page, total_pages)
-    offset = (page - 1) * COMPONENTS_PER_PAGE
 
     components_list = db.execute(
         f"""
@@ -104,6 +199,7 @@ def index():
 
 @main.route("/clientes", methods=("GET", "POST"))
 def clients():
+    db = get_db()
     error = None
 
     if request.method == "POST":
@@ -114,7 +210,17 @@ def clients():
         if not name:
             error = "Informe o nome do cliente."
         else:
-            db = get_db()
+            duplicate = find_duplicate_client(
+                db,
+                name,
+                phone,
+                address,
+            )
+
+            if duplicate is not None:
+                error = duplicate_client_error(duplicate)
+
+        if error is None:
             db.execute(
                 "INSERT INTO clients (name, phone, address) VALUES (?, ?, ?)",
                 (name, phone, address),
@@ -123,20 +229,56 @@ def clients():
 
             return redirect(url_for("main.clients"))
 
-    db = get_db()
+    search = request.args.get("q", "").strip()
+    where_parts = ["clients.active = 1"]
+    query_params = []
+
+    if search:
+        escaped_search = escape_like(search)
+        search_pattern = f"%{escaped_search}%"
+        search_conditions = [
+            "clients.name LIKE ? ESCAPE '\\' COLLATE NOCASE",
+            "clients.address LIKE ? ESCAPE '\\' COLLATE NOCASE",
+        ]
+        query_params.extend((search_pattern, search_pattern))
+
+        normalized_search_phone = phone_digits(search)
+        if normalized_search_phone:
+            search_conditions.append(
+                f"{CLIENT_PHONE_DIGITS_SQL} LIKE ? ESCAPE '\\'"
+            )
+            query_params.append(f"%{normalized_search_phone}%")
+
+        where_parts.append(f"({' OR '.join(search_conditions)})")
+
+    where_clause = " AND ".join(where_parts)
+    total_count = db.execute(
+        f"SELECT COUNT(*) FROM clients WHERE {where_clause}",
+        query_params,
+    ).fetchone()[0]
+    page, total_pages, offset = get_pagination(
+        total_count,
+        CLIENTS_PER_PAGE,
+    )
     clients_list = db.execute(
-        """
+        f"""
         SELECT id, name, phone, address
         FROM clients
-        WHERE active = 1
+        WHERE {where_clause}
         ORDER BY name COLLATE NOCASE
-        """
+        LIMIT ? OFFSET ?
+        """,
+        (*query_params, CLIENTS_PER_PAGE, offset),
     ).fetchall()
 
     return render_template(
         "clients.html",
         clients=clients_list,
         error=error,
+        search=search,
+        page=page,
+        total_pages=total_pages,
+        total_count=total_count,
     )
 
 
@@ -165,6 +307,18 @@ def edit_client(client_id):
         if not name:
             error = "Informe o nome do cliente."
         else:
+            duplicate = find_duplicate_client(
+                db,
+                name,
+                phone,
+                address,
+                exclude_client_id=client_id,
+            )
+
+            if duplicate is not None:
+                error = duplicate_client_error(duplicate)
+
+        if error is None:
             db.execute(
                 """
                 UPDATE clients
@@ -259,8 +413,44 @@ def quotes():
         """
     ).fetchall()
 
+    issued_search = request.args.get("q", "").strip()
+    issued_where_parts = ["quotes.status != 'draft'"]
+    issued_query_params = []
+
+    if issued_search:
+        escaped_search = escape_like(issued_search)
+        search_pattern = f"%{escaped_search}%"
+        search_conditions = [
+            "CAST(quotes.quote_number AS TEXT) LIKE ? ESCAPE '\\'",
+            "clients.name LIKE ? ESCAPE '\\' COLLATE NOCASE",
+        ]
+        issued_query_params.extend((search_pattern, search_pattern))
+
+        normalized_search_phone = phone_digits(issued_search)
+        if normalized_search_phone:
+            search_conditions.append(
+                f"{CLIENT_PHONE_DIGITS_SQL} LIKE ? ESCAPE '\\'"
+            )
+            issued_query_params.append(f"%{normalized_search_phone}%")
+
+        issued_where_parts.append(f"({' OR '.join(search_conditions)})")
+
+    issued_where_clause = " AND ".join(issued_where_parts)
+    issued_total_count = db.execute(
+        f"""
+        SELECT COUNT(*)
+        FROM quotes
+        JOIN clients ON clients.id = quotes.client_id
+        WHERE {issued_where_clause}
+        """,
+        issued_query_params,
+    ).fetchone()[0]
+    issued_page, issued_total_pages, issued_offset = get_pagination(
+        issued_total_count,
+        ISSUED_QUOTES_PER_PAGE,
+    )
     issued_quotes = db.execute(
-        """
+        f"""
         SELECT
             quotes.id,
             quotes.quote_number,
@@ -269,15 +459,21 @@ def quotes():
             clients.name AS client_name
         FROM quotes
         JOIN clients ON clients.id = quotes.client_id
-        WHERE quotes.status != 'draft'
+        WHERE {issued_where_clause}
         ORDER BY quotes.issued_at DESC, quotes.id DESC
-        """
+        LIMIT ? OFFSET ?
+        """,
+        (*issued_query_params, ISSUED_QUOTES_PER_PAGE, issued_offset),
     ).fetchall()
 
     return render_template(
         "quotes.html",
         drafts=drafts,
         issued_quotes=issued_quotes,
+        issued_search=issued_search,
+        issued_page=issued_page,
+        issued_total_pages=issued_total_pages,
+        issued_total_count=issued_total_count,
     )
 
 
