@@ -428,3 +428,80 @@ if (settingsSaveToast) {
         }, 250);
     }, 2000);
 }
+
+const issueModal = document.querySelector("#issue-modal");
+const issueForm = document.querySelector(".issue-form");
+const cancelIssueButton = document.querySelector("#cancel-issue");
+const confirmIssueButton = document.querySelector("#confirm-issue");
+
+if (
+    issueModal &&
+    issueForm &&
+    cancelIssueButton &&
+    confirmIssueButton
+) {
+    issueForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        issueModal.hidden = false;
+        document.body.classList.add("modal-open");
+        cancelIssueButton.focus();
+    });
+
+    function closeIssueModal() {
+        issueModal.hidden = true;
+        document.body.classList.remove("modal-open");
+    }
+
+    cancelIssueButton.addEventListener("click", closeIssueModal);
+
+    confirmIssueButton.addEventListener("click", () => {
+        issueForm.submit();
+    });
+
+    issueModal.addEventListener("click", (event) => {
+        if (event.target === issueModal) {
+            closeIssueModal();
+        }
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !issueModal.hidden) {
+            closeIssueModal();
+        }
+    });
+}
+
+
+
+const deleteDraftModal = document.querySelector("#delete-draft-modal");
+const deleteDraftForm = document.querySelector("#delete-draft-form");
+const cancelDeleteDraft = document.querySelector("#cancel-delete-draft");
+
+document.querySelectorAll(".remove-draft-button").forEach((button) => {
+    button.addEventListener("click", () => {
+        if (!deleteDraftModal || !deleteDraftForm) {
+            return;
+        }
+
+        deleteDraftForm.action = button.dataset.deleteUrl;
+        deleteDraftModal.hidden = false;
+        document.body.classList.add("modal-open");
+    });
+});
+
+if (cancelDeleteDraft && deleteDraftModal) {
+    cancelDeleteDraft.addEventListener("click", () => {
+        deleteDraftModal.hidden = true;
+        document.body.classList.remove("modal-open");
+    });
+}
+
+if (deleteDraftModal) {
+    deleteDraftModal.addEventListener("click", (event) => {
+        if (event.target === deleteDraftModal) {
+            deleteDraftModal.hidden = true;
+            document.body.classList.remove("modal-open");
+        }
+    });
+}

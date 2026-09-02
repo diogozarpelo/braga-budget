@@ -1466,6 +1466,146 @@ def calculate_price_breakdown(
 
 
 
+@main.post("/orcamentos/<int:quote_id>/remover-rascunho")
+def delete_draft_quote(quote_id):
+    db = get_db()
+
+    quote = db.execute(
+        """
+        SELECT id, status
+        FROM quotes
+        WHERE id = ?
+        """,
+        (quote_id,),
+    ).fetchone()
+
+    if quote is None:
+        abort(404)
+
+    if quote["status"] != "draft":
+        abort(400)
+
+    db.execute(
+        """
+        DELETE FROM quote_item_components
+        WHERE quote_item_id IN (
+            SELECT id
+            FROM quote_items
+            WHERE quote_id = ?
+        )
+        """,
+        (quote_id,),
+    )
+
+    db.execute(
+        """
+        DELETE FROM quote_items
+        WHERE quote_id = ?
+        """,
+        (quote_id,),
+    )
+
+    db.execute(
+        """
+        DELETE FROM quotes
+        WHERE id = ?
+        """,
+        (quote_id,),
+    )
+
+    db.commit()
+
+    return redirect(url_for("main.quotes"))
+
+
+@main.post("/orcamentos/<int:quote_id>/emitir")
+def issue_quote(quote_id):
+    db = get_db()
+
+    try:
+        db.execute("BEGIN IMMEDIATE")
+
+        quote = db.execute(
+            """
+            SELECT id, status
+            FROM quotes
+            WHERE id = ?
+            """,
+            (quote_id,),
+        ).fetchone()
+
+        if quote is None:
+            db.rollback()
+            abort(404)
+
+        if quote["status"] != "draft":
+            db.rollback()
+            abort(400)
+
+        item_count = db.execute(
+            """
+            SELECT COUNT(*)
+            FROM quote_items
+            WHERE quote_id = ?
+            """,
+            (quote_id,),
+        ).fetchone()[0]
+
+        if item_count == 0:
+            db.rollback()
+            abort(400)
+
+        settings = db.execute(
+            """
+            SELECT next_quote_number
+            FROM settings
+            WHERE id = 1
+            """
+        ).fetchone()
+
+        if settings is None:
+            db.rollback()
+            abort(500)
+
+        quote_number = settings["next_quote_number"]
+
+        db.execute(
+            """
+            UPDATE quotes
+            SET
+                quote_number = ?,
+                status = 'issued',
+                issued_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+            """,
+            (quote_number, quote_id),
+        )
+
+        db.execute(
+            """
+            UPDATE settings
+            SET
+                next_quote_number = next_quote_number + 1,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = 1
+            """
+        )
+
+        db.commit()
+
+    except Exception:
+        db.rollback()
+        raise
+
+    return redirect(
+        url_for(
+            "main.quote_detail",
+            quote_id=quote_id,
+        )
+    )
+
+
 @main.route(
     "/orcamentos/<int:quote_id>/valor-final",
     methods=("GET", "POST"),

@@ -23,29 +23,51 @@
 
     {% if drafts %}
         <div class="table-wrapper">
-            <table>
+            <table class="quotes-list-table">
                 <thead>
                     <tr>
+                        <th>N&uacute;mero</th>
                         <th>Cliente</th>
-                        <th>Criação</th>
-                        <th>Ações</th>
+                        <th>Situa&ccedil;&atilde;o</th>
+                        <th>Cria&ccedil;&atilde;o</th>
+                        <th class="draft-actions-header">A&ccedil;&otilde;es</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     {% for draft in drafts %}
                         <tr>
+                            <td>N&ordm; {{ loop.index }}</td>
+
                             <td>{{ draft["client_name"] }}</td>
+
+                            <td>
+                                <span class="status-badge status-draft">
+                                    Rascunho
+                                </span>
+                            </td>
+
                             <td>
                                 {{ draft["created_at"][8:10] }}/{{ draft["created_at"][5:7] }}/{{ draft["created_at"][0:4] }}
                             </td>
+
                             <td>
-                                <a
-                                    class="table-action"
-                                    href="{{ url_for('main.quote_detail', quote_id=draft['id']) }}"
-                                >
-                                    Continuar
-                                </a>
+                                <div class="table-actions draft-table-actions">
+                                    <a
+                                        class="table-action"
+                                        href="{{ url_for('main.quote_detail', quote_id=draft['id']) }}"
+                                    >
+                                        Continuar
+                                    </a>
+
+                                    <button
+                                        type="button"
+                                        class="table-action table-action-danger remove-draft-button"
+                                        data-delete-url="{{ url_for('main.delete_draft_quote', quote_id=draft['id']) }}"
+                                    >
+                                        Remover
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}
@@ -93,7 +115,7 @@
         } %}
 
         <div class="table-wrapper">
-            <table>
+            <table class="quotes-list-table">
                 <thead>
                     <tr>
                         <th>Número</th>
@@ -170,5 +192,46 @@
         </nav>
     {% endif %}
 </section>
+
+
+
+<div class="modal-backdrop" id="delete-draft-modal" hidden>
+    <section
+        class="confirmation-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-draft-title"
+    >
+        <div class="modal-warning" aria-hidden="true">!</div>
+
+        <h3 id="delete-draft-title">Remover rascunho?</h3>
+
+        <p>
+            Tem certeza de que deseja remover este rascunho?
+        </p>
+
+        <p class="modal-note">
+            Esta a&ccedil;&atilde;o n&atilde;o poder&aacute; ser desfeita.
+        </p>
+
+        <div class="modal-actions">
+            <button
+                type="button"
+                class="button button-secondary"
+                id="cancel-delete-draft"
+            >
+                Cancelar
+            </button>
+
+            <form method="post" id="delete-draft-form">
+                <button type="submit" class="button">
+                    Sim, remover rascunho
+                </button>
+            </form>
+        </div>
+    </section>
+</div>
+
+
 {% endblock %}
 

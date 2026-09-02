@@ -6,6 +6,7 @@
     {% else %}
         Rascunho de orçamento | Vidraçaria Braga
     {% endif %}
+
 {% endblock %}
 
 {% block content %}
@@ -382,29 +383,27 @@
 
             {% if quote["status"] == "draft" %}
                 <div class="summary-final-actions">
-                    {% if quote["manual_total_cents"] is not none %}
-                        <form
-                            method="post"
-                            action="{{ url_for(
-                                'main.edit_quote_final_total',
-                                quote_id=quote['id']
-                            ) }}"
-                            class="inline-form"
+                    <form
+                        method="post"
+                        action="{{ url_for(
+                            'main.edit_quote_final_total',
+                            quote_id=quote['id']
+                        ) }}"
+                        class="summary-action-form"
+                    >
+                        <button
+                            class="button button-secondary"
+                            type="submit"
+                            name="action"
+                            value="use_calculated"
+                            formnovalidate
                         >
-                            <button
-                                class="button button-secondary"
-                                type="submit"
-                                name="action"
-                                value="use_calculated"
-                                formnovalidate
-                            >
-                                Usar valor calculado
-                            </button>
-                        </form>
-                    {% endif %}
+                            Usar valor calculado
+                        </button>
+                    </form>
 
                     <a
-                        class="button button-secondary"
+                        class="button button-secondary summary-action-button"
                         href="{{ url_for(
                             'main.edit_quote_final_total',
                             quote_id=quote['id']
@@ -412,6 +411,23 @@
                     >
                         Ajustar valor final
                     </a>
+
+                    <form
+                        method="post"
+                        action="{{ url_for(
+                            'main.issue_quote',
+                            quote_id=quote['id']
+                        ) }}"
+                        class="summary-action-form issue-form"
+                    >
+                        <button
+                            type="button"
+                            class="button issue-quote-button"
+                            onclick="document.getElementById('issue-modal').hidden = false;"
+                        >
+                            Emitir or&ccedil;amento
+                        </button>
+                    </form>
                 </div>
             {% endif %}
         </div>
@@ -455,6 +471,48 @@
         </div>
     </section>
 </div>
+
+
+<div class="modal-backdrop" id="issue-modal" hidden>
+    <section
+        class="confirmation-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="issue-modal-title"
+    >
+        <div class="modal-warning" aria-hidden="true">!</div>
+
+        <h3 id="issue-modal-title">Emitir or&ccedil;amento?</h3>
+
+        <p>
+            Tem certeza de que deseja emitir este or&ccedil;amento?
+        </p>
+
+        <p class="modal-note">
+            Depois da emiss&atilde;o, ele deixar&aacute; de ser um rascunho.
+        </p>
+
+        <div class="modal-actions">
+            <button
+                class="button button-secondary"
+                id="cancel-issue"
+                type="button"
+            >
+                Cancelar
+            </button>
+
+            <button
+                class="button"
+                id="confirm-issue"
+                type="button"
+                onclick="document.querySelector('.issue-form').submit();"
+            >
+                Sim, emitir or&ccedil;amento
+            </button>
+        </div>
+    </section>
+</div>
+
 {% endblock %}
 
 

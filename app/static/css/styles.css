@@ -1746,3 +1746,132 @@ body.modal-open {
 .component-row {
     width: 100%;
 }
+
+
+/* Quote issuing actions */
+.summary-final-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.issue-quote-form {
+    margin-left: auto;
+}
+
+.issue-quote-form .button {
+    color: #fff;
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.issue-quote-form .button:hover {
+    background: var(--color-primary-dark);
+}
+
+
+/* Final quote actions */
+.summary-final-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    width: 100%;
+    margin-top: 28px;
+}
+
+.summary-action-form {
+    display: block;
+    width: 100%;
+    margin: 0;
+}
+
+.summary-final-actions .button {
+    display: flex;
+    width: 100%;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.issue-quote-button {
+    color: #fff;
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.issue-quote-button:hover {
+    background: var(--color-primary-dark);
+}
+
+@media (max-width: 700px) {
+    .summary-final-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+.summary-final-actions .button {
+    white-space: nowrap;
+}
+
+
+/* Draft quote table */
+.status-draft {
+    color: #555;
+    background: #e8e8e8;
+}
+
+.draft-actions-header {
+    text-align: center;
+}
+
+.draft-table-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+}
+
+.button-link {
+    font: inherit;
+    cursor: pointer;
+}
+
+
+/* Quotes list symmetry */
+.quotes-list-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.quotes-list-table th:nth-child(1),
+.quotes-list-table td:nth-child(1) {
+    width: 12%;
+}
+
+.quotes-list-table th:nth-child(2),
+.quotes-list-table td:nth-child(2) {
+    width: 28%;
+}
+
+.quotes-list-table th:nth-child(3),
+.quotes-list-table td:nth-child(3) {
+    width: 18%;
+}
+
+.quotes-list-table th:nth-child(4),
+.quotes-list-table td:nth-child(4) {
+    width: 20%;
+}
+
+.quotes-list-table th:nth-child(5),
+.quotes-list-table td:nth-child(5) {
+    width: 22%;
+    text-align: center;
+}
+
+.draft-table-actions {
+    gap: 8px;
+}
