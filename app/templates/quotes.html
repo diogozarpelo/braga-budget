@@ -140,12 +140,23 @@
                                 {{ quote["issued_at"][8:10] }}/{{ quote["issued_at"][5:7] }}/{{ quote["issued_at"][0:4] }}
                             </td>
                             <td>
-                                <a
-                                    class="table-action"
-                                    href="{{ url_for('main.quote_detail', quote_id=quote['id']) }}"
-                                >
-                                    Abrir
-                                </a>
+                                <div class="table-actions quote-status-actions">
+                                    <a
+                                        class="table-action"
+                                        href="{{ url_for('main.quote_detail', quote_id=quote['id']) }}"
+                                    >
+                                        Abrir
+                                    </a>
+
+                                    <button
+                                        type="button"
+                                        class="table-action change-status-button"
+                                        data-status-url="{{ url_for('main.update_quote_status', quote_id=quote['id']) }}"
+                                        data-current-status="{{ quote['status'] }}"
+                                    >
+                                        Alterar status
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}
@@ -228,6 +239,68 @@
                     Sim, remover rascunho
                 </button>
             </form>
+        </div>
+    </section>
+</div>
+
+
+
+
+
+<div class="modal-backdrop" id="quote-status-modal" hidden>
+    <section
+        class="confirmation-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quote-status-title"
+    >
+        <div class="modal-warning" aria-hidden="true">!</div>
+
+        <h3 id="quote-status-title">Alterar status do or&ccedil;amento</h3>
+
+        <p>
+            Escolha a nova situa&ccedil;&atilde;o deste or&ccedil;amento.
+        </p>
+
+        <form method="post" id="quote-status-form">
+            <div class="status-choice-actions">
+                <button
+                    type="submit"
+                    name="status"
+                    value="approved"
+                    class="button button-success"
+                >
+                    Aprovar or&ccedil;amento
+                </button>
+
+                <button
+                    type="submit"
+                    name="status"
+                    value="rejected"
+                    class="button button-danger"
+                >
+                    Recusar or&ccedil;amento
+                </button>
+
+                <button
+                    type="submit"
+                    name="status"
+                    value="issued"
+                    class="button button-secondary"
+                >
+                    Voltar para emitido
+                </button>
+            </div>
+        </form>
+
+        <div class="modal-actions">
+            <button
+                type="button"
+                class="button button-secondary"
+                id="cancel-quote-status"
+            >
+                Cancelar
+            </button>
         </div>
     </section>
 </div>

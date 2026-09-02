@@ -505,3 +505,36 @@ if (deleteDraftModal) {
         }
     });
 }
+
+
+const quoteStatusModal = document.querySelector("#quote-status-modal");
+const quoteStatusForm = document.querySelector("#quote-status-form");
+const cancelQuoteStatus = document.querySelector("#cancel-quote-status");
+
+document.querySelectorAll(".change-status-button").forEach((button) => {
+    button.addEventListener("click", () => {
+        if (!quoteStatusModal || !quoteStatusForm) {
+            return;
+        }
+
+        quoteStatusForm.action = button.dataset.statusUrl;
+        quoteStatusModal.hidden = false;
+        document.body.classList.add("modal-open");
+    });
+});
+
+if (cancelQuoteStatus && quoteStatusModal) {
+    cancelQuoteStatus.addEventListener("click", () => {
+        quoteStatusModal.hidden = true;
+        document.body.classList.remove("modal-open");
+    });
+}
+
+if (quoteStatusModal) {
+    quoteStatusModal.addEventListener("click", (event) => {
+        if (event.target === quoteStatusModal) {
+            quoteStatusModal.hidden = true;
+            document.body.classList.remove("modal-open");
+        }
+    });
+}

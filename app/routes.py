@@ -1518,6 +1518,50 @@ def delete_draft_quote(quote_id):
     return redirect(url_for("main.quotes"))
 
 
+@main.post("/orcamentos/<int:quote_id>/status")
+def update_quote_status(quote_id):
+    db = get_db()
+
+    quote = db.execute(
+        """
+        SELECT id, status
+        FROM quotes
+        WHERE id = ?
+        """,
+        (quote_id,),
+    ).fetchone()
+
+    if quote is None:
+        abort(404)
+
+    if quote["status"] == "draft":
+        abort(400)
+
+    new_status = request.form.get("status", "").strip()
+
+    if new_status not in {"issued", "approved", "rejected"}:
+        abort(400)
+
+    db.execute(
+        """
+        UPDATE quotes
+        SET
+            status = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (new_status, quote_id),
+    )
+
+    db.commit()
+
+    return redirect(
+        url_for(
+            "main.quotes",
+        )
+    )
+
+
 @main.post("/orcamentos/<int:quote_id>/emitir")
 def issue_quote(quote_id):
     db = get_db()

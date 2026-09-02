@@ -1875,3 +1875,47 @@ body.modal-open {
 .draft-table-actions {
     gap: 8px;
 }
+
+
+/* Quote status management */
+.status-approved {
+    color: var(--color-success-dark);
+    background: var(--color-success-soft);
+}
+
+.status-rejected {
+    color: var(--color-danger-dark);
+    background: var(--color-danger-soft);
+}
+
+.quote-status-actions {
+    justify-content: center;
+}
+
+.status-choice-actions {
+    display: grid;
+    gap: 12px;
+    margin-top: 22px;
+}
+
+.status-choice-actions .button {
+    width: 100%;
+}
+
+.button-success {
+    color: #fff;
+    background: var(--color-success-dark);
+    border-color: var(--color-success-dark);
+}
+
+.button-danger {
+    color: #fff;
+    background: var(--color-danger-dark);
+    border-color: var(--color-danger-dark);
+}
+
+
+.status-issued {
+    color: #3f5870;
+    background: #e5edf4;
+}
