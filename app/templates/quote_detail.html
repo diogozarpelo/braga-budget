@@ -357,7 +357,10 @@
                             <span>Exportar PDF</span>
                         </a>
 
-                        <button type="button" class="button export-button">
+                        <a
+                            class="button export-button"
+                            href="{{ url_for('main.export_quote_image', quote_id=quote['id']) }}"
+                        >
                             <svg
                                 class="export-real-icon"
                                 viewBox="0 0 24 24"
@@ -370,7 +373,7 @@
                             </svg>
 
                             <span>Exportar imagem</span>
-                        </button>
+                        </a>
                     </div>
                 </aside>
             {% endif %}

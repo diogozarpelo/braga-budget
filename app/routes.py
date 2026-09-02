@@ -1,3 +1,5 @@
+import fitz
+from PIL import Image as PILImage
 from html import escape
 from pathlib import Path
 from io import BytesIO
@@ -1465,6 +1467,124 @@ def export_quote_pdf(quote_id):
         as_attachment=True,
         download_name=(
             f"orcamento-{quote['quote_number']}.pdf"
+        ),
+    )
+
+
+
+@main.get("/orcamentos/<int:quote_id>/exportar/imagem")
+def export_quote_image(quote_id):
+    db = get_db()
+
+    quote = db.execute(
+        """
+        SELECT id, quote_number, status
+        FROM quotes
+        WHERE id = ?
+        """,
+        (quote_id,),
+    ).fetchone()
+
+    if quote is None:
+        abort(404)
+
+    if quote["status"] == "draft":
+        abort(400)
+
+    # Reaproveita exatamente o PDF definitivo.
+    pdf_response = export_quote_pdf(quote_id)
+
+    # send_file usa streaming; desabilitamos apenas aqui para
+    # acessar os bytes em mem?ria e convert?-los para PNG.
+    pdf_response.direct_passthrough = False
+    pdf_bytes = pdf_response.get_data()
+
+    pdf_document = fitz.open(
+        stream=pdf_bytes,
+        filetype="pdf",
+    )
+
+    rendered_pages = []
+
+    try:
+        # 2x = boa defini??o para leitura e compartilhamento.
+        matrix = fitz.Matrix(2, 2)
+
+        for page in pdf_document:
+            pixmap = page.get_pixmap(
+                matrix=matrix,
+                alpha=False,
+            )
+
+            page_png = BytesIO(
+                pixmap.tobytes("png")
+            )
+
+            image = PILImage.open(page_png).convert("RGB")
+            rendered_pages.append(image.copy())
+            image.close()
+
+    finally:
+        pdf_document.close()
+
+    if not rendered_pages:
+        abort(500)
+
+    if len(rendered_pages) == 1:
+        final_image = rendered_pages[0]
+    else:
+        final_width = max(
+            image.width
+            for image in rendered_pages
+        )
+
+        final_height = sum(
+            image.height
+            for image in rendered_pages
+        )
+
+        final_image = PILImage.new(
+            "RGB",
+            (final_width, final_height),
+            "white",
+        )
+
+        current_y = 0
+
+        for image in rendered_pages:
+            current_x = (
+                final_width - image.width
+            ) // 2
+
+            final_image.paste(
+                image,
+                (current_x, current_y),
+            )
+
+            current_y += image.height
+
+    output = BytesIO()
+
+    final_image.save(
+        output,
+        format="PNG",
+        optimize=True,
+    )
+
+    output.seek(0)
+
+    for image in rendered_pages:
+        if image is not final_image:
+            image.close()
+
+    final_image.close()
+
+    return send_file(
+        output,
+        mimetype="image/png",
+        as_attachment=True,
+        download_name=(
+            f"orcamento-{quote['quote_number']}.png"
         ),
     )
 

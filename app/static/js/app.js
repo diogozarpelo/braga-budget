@@ -543,6 +543,7 @@ if (quoteStatusModal) {
 const quoteExportModal = document.querySelector("#quote-export-modal");
 const cancelQuoteExport = document.querySelector("#cancel-quote-export");
 const exportPdfOption = document.querySelector("#export-pdf-option");
+const exportImageOption = document.querySelector("#export-image-option");
 
 document.querySelectorAll(".export-quote-button").forEach((button) => {
     button.addEventListener("click", () => {
@@ -552,6 +553,7 @@ document.querySelectorAll(".export-quote-button").forEach((button) => {
 
         quoteExportModal.dataset.quoteId = button.dataset.quoteId;
         quoteExportModal.dataset.pdfUrl = button.dataset.pdfUrl;
+        quoteExportModal.dataset.imageUrl = button.dataset.imageUrl;
         quoteExportModal.hidden = false;
         document.body.classList.add("modal-open");
     });
@@ -568,6 +570,20 @@ if (exportPdfOption && quoteExportModal) {
         quoteExportModal.hidden = true;
         document.body.classList.remove("modal-open");
         window.location.href = pdfUrl;
+    });
+}
+
+if (exportImageOption && quoteExportModal) {
+    exportImageOption.addEventListener("click", () => {
+        const imageUrl = quoteExportModal.dataset.imageUrl;
+
+        if (!imageUrl) {
+            return;
+        }
+
+        quoteExportModal.hidden = true;
+        document.body.classList.remove("modal-open");
+        window.location.href = imageUrl;
     });
 }
 
