@@ -24,49 +24,22 @@
     {% endif %}
 
     <form method="post" class="form-grid" id="component-form" data-item-width-mm="{{ item['width_mm'] }}" data-item-quantity="{{ item['item_quantity'] }}" autocomplete="off">
+
         <label class="field">
-            <span>Tipo *</span>
-            <select name="category" required autofocus>
-                <option value="">Selecione</option>
-                <option
-                    value="kit"
-                    {% if request.form.get('category') == 'kit' %}selected{% endif %}
-                >
-                    Kit de instalação
-                </option>
-                <option
-                    value="accessory"
-                    {% if request.form.get('category') == 'accessory' %}selected{% endif %}
-                >
-                    Acessório
-                </option>
-                <option
-                    value="other"
-                    {% if request.form.get('category') == 'other' %}selected{% endif %}
-                >
-                    Outro material
-                </option>
+            <span>Componente *</span>
+            <select name="description" id="component-description" required>
+                <option value="">Selecione um componente</option>
+                {% for component in available_components %}
+                    <option
+                        value="{{ component['name'] }}"
+                        data-price="{{ '%.2f'|format(component['unit_price_cents'] / 100) }}"
+                        {% if request.form.get('description') == component['name'] %}selected{% endif %}
+                    >
+                        {{ component['name'] }}
+                    </option>
+                {% endfor %}
             </select>
         </label>
-
-        <label class="field">
-            <span>Descrição *</span>
-            <input
-                type="text"
-                name="description"
-                list="component-descriptions"
-                value="{{ request.form.get('description', '') }}"
-                placeholder="Ex.: Kit de instalação 2 m"
-                required
-            >
-        </label>
-
-        <datalist id="component-descriptions">
-            <option value="Kit de instalação 2 m">
-            <option value="Roldana">
-            <option value="Puxador">
-            <option value="Fechadura">
-        </datalist>
 
         <label class="field">
             <span>Quantidade *</span>
@@ -92,11 +65,12 @@
             >
         </label>
 
+        <div class="field">
+            <span>Valor total do componente</span>
+            <output class="calculated-value" id="component-total">R$ 0,00</output>
+        </div>
+
         <div class="component-help field-full">
-            <div class="info-box" id="kit-suggestion" hidden>
-                <strong>Sugestão automática:</strong>
-                <span id="kit-suggestion-text"></span>
-            </div>
 
             <div class="info-box">
                 O total será calculado pela quantidade × valor unitário.

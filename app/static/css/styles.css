@@ -137,6 +137,7 @@ button:hover {
 .button-secondary {
     color: var(--color-primary-dark);
     background: var(--color-primary-soft);
+    border: 1px solid var(--color-primary);
 }
 
 .button-secondary:hover {
@@ -537,15 +538,16 @@ body.modal-open {
 }
 
 .calculated-value {
-    display: flex;
-    min-height: 46px;
+    display: inline-flex;
+    min-height: auto;
     align-items: center;
-    padding: 12px;
-    border: 1px solid var(--color-primary-soft-hover);
-    border-radius: 8px;
+    margin-left: 6px;
+    padding: 3px 8px;
+    border: 1px solid var(--color-primary);
+    border-radius: 6px;
     color: var(--color-primary-dark);
-    background: var(--color-primary-soft);
-    font-size: 17px;
+    background: var(--color-surface);
+    font-size: 15px;
     font-weight: bold;
 }
 
@@ -1001,7 +1003,7 @@ body.modal-open {
 .summary-final-action {
     display: flex;
     justify-content: flex-end;
-    margin-top: 16px;
+    margin-top: 24px;
 }
 
 .summary-final-action .button {
@@ -1069,7 +1071,7 @@ body.modal-open {
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 16px;
+    margin-top: 28px;
 }
 
 .summary-final-actions .button {
@@ -1557,3 +1559,19 @@ body.modal-open {
     }
 }
 
+
+
+
+#component-total {
+    display: flex;
+    width: 100%;
+    min-height: 46px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--color-primary);
+    border-radius: 8px;
+    background: var(--color-surface);
+    font-size: 16px;
+    font-weight: bold;
+    box-sizing: border-box;
+}

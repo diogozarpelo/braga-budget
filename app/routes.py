@@ -715,9 +715,6 @@ def new_quote_item(quote_id):
             quantity = int(request.form.get("quantity", ""))
             width_mm = int(request.form.get("width_mm", ""))
             height_mm = int(request.form.get("height_mm", ""))
-            charged_area_m2 = parse_decimal(
-                request.form.get("charged_area_m2", "")
-            )
             thickness_mm = parse_decimal(
                 request.form.get("thickness_mm", "")
             )
@@ -735,8 +732,6 @@ def new_quote_item(quote_id):
             error = "A quantidade deve ser maior que zero."
         elif error is None and (width_mm <= 0 or height_mm <= 0):
             error = "A largura e a altura devem ser maiores que zero."
-        elif error is None and charged_area_m2 <= 0:
-            error = "A área cobrada deve ser maior que zero."
         elif error is None and thickness_mm <= 0:
             error = "A espessura deve ser maior que zero."
         elif error is None and glass_price_per_m2_cents <= 0:
@@ -751,6 +746,7 @@ def new_quote_item(quote_id):
                 Decimal("0.0001"),
                 rounding=ROUND_HALF_UP,
             )
+            charged_area_m2 = exact_area_m2
 
             db.execute(
                 """
@@ -848,7 +844,7 @@ def new_quote_item_component(quote_id, item_id):
     error = None
 
     if request.method == "POST":
-        category = request.form.get("category", "").strip()
+        category = "other"
         description = request.form.get("description", "").strip()
 
         try:
@@ -858,10 +854,7 @@ def new_quote_item_component(quote_id, item_id):
             )
         except (ValueError, InvalidOperation):
             error = "Preencha corretamente a quantidade e o valor."
-
-        if error is None and category not in {"kit", "accessory", "other"}:
-            error = "Selecione o tipo do componente."
-        elif error is None and not description:
+        if error is None and not description:
             error = "Informe a descrição do componente."
         elif error is None and quantity <= 0:
             error = "A quantidade deve ser maior que zero."
@@ -894,9 +887,19 @@ def new_quote_item_component(quote_id, item_id):
                 url_for("main.quote_detail", quote_id=quote_id, _anchor="quote-items")
             )
 
+    available_components = db.execute(
+        """
+        SELECT id, name, unit_price_cents
+        FROM components
+        WHERE active = 1
+        ORDER BY name COLLATE NOCASE
+        """
+    ).fetchall()
+
     return render_template(
         "new_quote_item_component.html",
         item=item,
+        available_components=available_components,
         error=error,
     )
 
@@ -1071,9 +1074,6 @@ def edit_quote_item(quote_id, item_id):
             quantity = int(request.form.get("quantity", ""))
             width_mm = int(request.form.get("width_mm", ""))
             height_mm = int(request.form.get("height_mm", ""))
-            charged_area_m2 = parse_decimal(
-                request.form.get("charged_area_m2", "")
-            )
             thickness_mm = parse_decimal(
                 request.form.get("thickness_mm", "")
             )
@@ -1091,8 +1091,6 @@ def edit_quote_item(quote_id, item_id):
             error = "A quantidade deve ser maior que zero."
         elif error is None and (width_mm <= 0 or height_mm <= 0):
             error = "A largura e a altura devem ser maiores que zero."
-        elif error is None and charged_area_m2 <= 0:
-            error = "A área cobrada deve ser maior que zero."
         elif error is None and thickness_mm <= 0:
             error = "A espessura deve ser maior que zero."
         elif error is None and glass_price_per_m2_cents <= 0:
@@ -1107,6 +1105,7 @@ def edit_quote_item(quote_id, item_id):
                 Decimal("0.0001"),
                 rounding=ROUND_HALF_UP,
             )
+            charged_area_m2 = exact_area_m2
 
             db.execute(
                 """

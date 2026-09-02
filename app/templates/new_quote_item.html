@@ -94,25 +94,6 @@
             >
         </label>
 
-        <div class="field">
-            <span>Área exata por unidade</span>
-            <output class="calculated-value" id="exact-area-output">
-                0,0000 m²
-            </output>
-        </div>
-
-        <label class="field">
-            <span>Área cobrada por unidade em m² *</span>
-            <input
-                type="text"
-                name="charged_area_m2"
-                value="{{ request.form.get('charged_area_m2', '') }}"
-                placeholder="Ex.: 1,60"
-                inputmode="decimal"
-                required
-            >
-        </label>
-
         <label class="field">
             <span>Tipo de vidro *</span>
             <input
@@ -184,6 +165,9 @@
         </label>
 
         <div class="info-box field-full">
+            &Aacute;rea exata por unidade calculada automaticamente:
+            <output class="calculated-value" id="exact-area-output">0,0000 m&sup2;</output>
+            <br>
             Kits de instalação e acessórios serão adicionados ao item na próxima etapa.
         </div>
 

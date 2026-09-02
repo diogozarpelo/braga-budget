@@ -247,75 +247,66 @@ if (
 }
 
 const componentForm = document.querySelector("#component-form");
-const componentCategory = componentForm?.querySelector(
-    'select[name="category"]'
+const componentDescription = document.querySelector("#component-description");
+const componentUnitPrice = componentForm?.querySelector(
+    'input[name="unit_price"]'
 );
-const componentDescription = componentForm?.querySelector(
-    'input[name="description"]'
-);
+
+function updateComponentPrice() {
+    if (!componentDescription || !componentUnitPrice) {
+        return;
+    }
+
+    const option =
+        componentDescription.options[componentDescription.selectedIndex];
+
+    if (!option || !option.dataset.price) {
+        componentUnitPrice.value = "";
+        return;
+    }
+
+    componentUnitPrice.value = option.dataset.price.replace(".", ",");
+}
+
+if (componentDescription) {
+    componentDescription.addEventListener("change", updateComponentPrice);
+}
+
 const componentQuantity = componentForm?.querySelector(
     'input[name="quantity"]'
 );
-const kitSuggestion = document.querySelector("#kit-suggestion");
-const kitSuggestionText = document.querySelector("#kit-suggestion-text");
+const componentTotal = document.querySelector("#component-total");
 
-let lastSuggestedKitDescription = "";
-
-function updateKitSuggestion(prefillFields) {
-    if (
-        !componentForm ||
-        !componentCategory ||
-        !componentDescription ||
-        !componentQuantity ||
-        !kitSuggestion ||
-        !kitSuggestionText
-    ) {
+function updateComponentTotal() {
+    if (!componentQuantity || !componentUnitPrice || !componentTotal) {
         return;
     }
 
-    if (componentCategory.value !== "kit") {
-        kitSuggestion.hidden = true;
-        return;
-    }
+    const quantity = Number.parseFloat(componentQuantity.value) || 0;
+    const unitPrice =
+        Number.parseFloat(componentUnitPrice.value.replace(",", ".")) || 0;
 
-    const widthMm = Number(componentForm.dataset.itemWidthMm);
-    const itemQuantity = Number(componentForm.dataset.itemQuantity);
-    const roundedWidthMm = Math.ceil(widthMm / 500) * 500;
-    const kitLengthMeters = roundedWidthMm / 1000;
-    const formattedLength = kitLengthMeters.toLocaleString("pt-BR", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 1,
+    const total = quantity * unitPrice;
+
+    componentTotal.textContent = total.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
     });
-
-    const suggestedDescription = `Kit de instalação ${formattedLength} m`;
-
-    kitSuggestionText.textContent =
-        `${suggestedDescription}.`;
-
-    kitSuggestion.hidden = false;
-
-    if (prefillFields) {
-        if (
-            !componentDescription.value.trim() ||
-            componentDescription.value === lastSuggestedKitDescription
-        ) {
-            componentDescription.value = suggestedDescription;
-        }
-
-        componentQuantity.value = itemQuantity;
-    }
-
-    lastSuggestedKitDescription = suggestedDescription;
 }
 
-if (componentCategory) {
-    componentCategory.addEventListener("change", () => {
-        updateKitSuggestion(true);
-    });
-
-    updateKitSuggestion(false);
+if (componentDescription) {
+    componentDescription.addEventListener("change", updateComponentTotal);
 }
 
+if (componentQuantity) {
+    componentQuantity.addEventListener("input", updateComponentTotal);
+}
+
+if (componentUnitPrice) {
+    componentUnitPrice.addEventListener("input", updateComponentTotal);
+}
+
+updateComponentTotal();
 
 
 function formatCnpj(value) {
