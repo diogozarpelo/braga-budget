@@ -538,3 +538,35 @@ if (quoteStatusModal) {
         }
     });
 }
+
+
+const quoteExportModal = document.querySelector("#quote-export-modal");
+const cancelQuoteExport = document.querySelector("#cancel-quote-export");
+
+document.querySelectorAll(".export-quote-button").forEach((button) => {
+    button.addEventListener("click", () => {
+        if (!quoteExportModal) {
+            return;
+        }
+
+        quoteExportModal.dataset.quoteId = button.dataset.quoteId;
+        quoteExportModal.hidden = false;
+        document.body.classList.add("modal-open");
+    });
+});
+
+if (cancelQuoteExport && quoteExportModal) {
+    cancelQuoteExport.addEventListener("click", () => {
+        quoteExportModal.hidden = true;
+        document.body.classList.remove("modal-open");
+    });
+}
+
+if (quoteExportModal) {
+    quoteExportModal.addEventListener("click", (event) => {
+        if (event.target === quoteExportModal) {
+            quoteExportModal.hidden = true;
+            document.body.classList.remove("modal-open");
+        }
+    });
+}

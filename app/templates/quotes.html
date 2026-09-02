@@ -145,7 +145,7 @@
                                         class="table-action"
                                         href="{{ url_for('main.quote_detail', quote_id=quote['id']) }}"
                                     >
-                                        Abrir
+                                        Ver
                                     </a>
 
                                     <button
@@ -154,7 +154,15 @@
                                         data-status-url="{{ url_for('main.update_quote_status', quote_id=quote['id']) }}"
                                         data-current-status="{{ quote['status'] }}"
                                     >
-                                        Alterar status
+                                        Status
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="table-action export-quote-button"
+                                        data-quote-id="{{ quote['id'] }}"
+                                    >
+                                        Exportar
                                     </button>
                                 </div>
                             </td>
@@ -298,6 +306,55 @@
                 type="button"
                 class="button button-secondary"
                 id="cancel-quote-status"
+            >
+                Cancelar
+            </button>
+        </div>
+    </section>
+</div>
+
+
+
+
+
+<div class="modal-backdrop" id="quote-export-modal" hidden>
+    <section
+        class="confirmation-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quote-export-title"
+    >
+        <h3 id="quote-export-title">
+            Exportar or&ccedil;amento
+        </h3>
+
+        <p>
+            Escolha o formato desejado.
+        </p>
+
+        <div class="export-modal-actions">
+            <button
+                type="button"
+                class="button export-modal-option"
+                id="export-pdf-option"
+            >
+                Exportar PDF
+            </button>
+
+            <button
+                type="button"
+                class="button export-modal-option"
+                id="export-image-option"
+            >
+                Exportar imagem
+            </button>
+        </div>
+
+        <div class="modal-actions">
+            <button
+                type="button"
+                class="button button-secondary"
+                id="cancel-quote-export"
             >
                 Cancelar
             </button>
