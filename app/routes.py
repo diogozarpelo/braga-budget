@@ -1223,7 +1223,7 @@ def export_quote_pdf(quote_id):
 
 
     # --------------------------------------------------------
-    # Itens
+    # Itens comerciais
     # --------------------------------------------------------
 
     story.append(
@@ -1233,191 +1233,115 @@ def export_quote_pdf(quote_id):
         )
     )
 
-    for index, item in enumerate(items, start=1):
-        description = item["service_type"] or ""
-
-        if item["description"]:
-            description += f" - {item['description']}"
-
-        item_rows = [
-            [
-                Paragraph(
-                    f"<b>Item {index}</b>",
-                    normal_style,
-                ),
-                Paragraph(
-                    safe(description),
-                    normal_style,
-                ),
-                Paragraph(
-                    brl(item["glass_total_cents"]),
-                    right_style,
-                ),
-            ],
-            [
-                "",
-                Paragraph(
-                    (
-                        f"{item['quantity']} un. | "
-                        f"{item['width_mm']} x "
-                        f"{item['height_mm']} mm | "
-                        f"{safe(item['glass_type'])} | "
-                        f"{item['thickness_mm']} mm | "
-                        f"{safe(item['glass_color'], '-')} | "
-                        f"{safe(item['finish'], '-')}"
-                    ),
-                    small_style,
-                ),
-                "",
-            ],
+    commercial_rows = [
+        [
+            Paragraph("<b>SERVI\u00c7O</b>", bold_style),
+            Paragraph("<b>DESCRI\u00c7\u00c3O</b>", bold_style),
+            Paragraph("<b>VALOR</b>", right_style),
         ]
-
-        for component in components_by_item[item["id"]]:
-            item_rows.append(
-                [
-                    "",
-                    Paragraph(
-                        (
-                            f"{safe(component['description'])} - "
-                            f"{component['quantity']} x "
-                            f"{brl(component['unit_price_cents'])}"
-                        ),
-                        small_style,
-                    ),
-                    Paragraph(
-                        brl(component["total_cents"]),
-                        right_style,
-                    ),
-                ]
-            )
-
-        item_table = Table(
-            item_rows,
-            colWidths=[
-                19 * mm,
-                130 * mm,
-                32 * mm,
-            ],
-        )
-
-        item_table.setStyle(
-            TableStyle(
-                [
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    (
-                        "BACKGROUND",
-                        (0, 0),
-                        (-1, 0),
-                        colors.HexColor("#F4ECE9"),
-                    ),
-                    (
-                        "BOX",
-                        (0, 0),
-                        (-1, -1),
-                        0.5,
-                        colors.HexColor("#D8C7C2"),
-                    ),
-                    (
-                        "INNERGRID",
-                        (0, 0),
-                        (-1, -1),
-                        0.25,
-                        colors.HexColor("#E9DEDA"),
-                    ),
-                    ("LEFTPADDING", (0, 0), (-1, -1), 5),
-                    ("RIGHTPADDING", (0, 0), (-1, -1), 5),
-                    ("TOPPADDING", (0, 0), (-1, -1), 4),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-                ]
-            )
-        )
-
-        story.append(
-            KeepTogether(
-                [
-                    item_table,
-                    Spacer(1, 2 * mm),
-                ]
-            )
-        )
-
-    # --------------------------------------------------------
-    # Resumo financeiro
-    # --------------------------------------------------------
-
-    totals = [
-        [
-            Paragraph("Subtotal do vidro", normal_style),
-            Paragraph(
-                brl(glass_subtotal_cents),
-                right_style,
-            ),
-        ],
-        [
-            Paragraph("Componentes", normal_style),
-            Paragraph(
-                brl(components_subtotal_cents),
-                right_style,
-            ),
-        ],
-        [
-            Paragraph("Total dos materiais", normal_style),
-            Paragraph(
-                brl(materials_subtotal_cents),
-                right_style,
-            ),
-        ],
-        [
-            Paragraph("M\u00e3o de obra", normal_style),
-            Paragraph(
-                brl(price_breakdown["labor_cents"]),
-                right_style,
-            ),
-        ],
-        [
-            Paragraph(
-                "Adicional de dificuldade",
-                normal_style,
-            ),
-            Paragraph(
-                brl(price_breakdown["difficulty_cents"]),
-                right_style,
-            ),
-        ],
-        [
-            Paragraph("Desconto", normal_style),
-            Paragraph(
-                f"- {brl(price_breakdown['discount_cents'])}",
-                right_style,
-            ),
-        ],
-        [
-            Paragraph("<b>VALOR FINAL</b>", bold_style),
-            Paragraph(
-                f'<font name="{font_bold}"><b>{brl(display_total_cents)}</b></font>',
-                right_style,
-            ),
-        ],
     ]
 
-    totals_table = Table(
-        totals,
+    for item in items:
+        service_text = safe(
+            item["service_type"],
+            "-",
+        )
+
+        description_parts = []
+
+        if item["description"]:
+            description_parts.append(
+                safe(item["description"])
+            )
+
+        technical_parts = []
+
+        if item["quantity"]:
+            technical_parts.append(
+                f"{item['quantity']} un."
+            )
+
+        if item["width_mm"] and item["height_mm"]:
+            technical_parts.append(
+                f"{item['width_mm']} x {item['height_mm']} mm"
+            )
+
+        if item["glass_type"]:
+            technical_parts.append(
+                safe(item["glass_type"])
+            )
+
+        if item["thickness_mm"]:
+            technical_parts.append(
+                f"{item['thickness_mm']} mm"
+            )
+
+        if item["glass_color"]:
+            technical_parts.append(
+                safe(item["glass_color"])
+            )
+
+        if item["finish"]:
+            technical_parts.append(
+                safe(item["finish"])
+            )
+
+        if technical_parts:
+            description_parts.append(
+                " | ".join(technical_parts)
+            )
+
+        description_text = (
+            "<br/>".join(description_parts)
+            if description_parts
+            else "-"
+        )
+
+        commercial_rows.append(
+            [
+                Paragraph(
+                    service_text,
+                    normal_style,
+                ),
+                Paragraph(
+                    description_text,
+                    small_style,
+                ),
+                Paragraph(
+                    f'<font name="{font_bold}"><b>'
+                    f'{brl(item["commercial_total_cents"])}'
+                    f'</b></font>',
+                    right_style,
+                ),
+            ]
+        )
+
+    commercial_table = Table(
+        commercial_rows,
         colWidths=[
-            126 * mm,
-            55 * mm,
+            42 * mm,
+            100 * mm,
+            39 * mm,
         ],
+        repeatRows=1,
     )
 
-    totals_table.setStyle(
+    commercial_table.setStyle(
         TableStyle(
             [
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("ALIGN", (2, 0), (2, -1), "RIGHT"),
                 (
                     "BACKGROUND",
                     (0, 0),
                     (-1, 0),
                     colors.HexColor("#F4ECE9"),
+                ),
+                (
+                    "TEXTCOLOR",
+                    (0, 0),
+                    (-1, 0),
+                    colors.HexColor("#7A2028"),
                 ),
                 (
                     "BOX",
@@ -1433,41 +1357,73 @@ def export_quote_pdf(quote_id):
                     0.25,
                     colors.HexColor("#E9DEDA"),
                 ),
-                ("LEFTPADDING", (0, 0), (-1, -1), 5),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 5),
-                ("TOPPADDING", (0, 0), (-1, -1), 4),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+
+    story.append(commercial_table)
+    story.append(Spacer(1, 5 * mm))
+
+    final_total_table = Table(
+        [
+            [
+                Paragraph(
+                    "<b>VALOR TOTAL</b>",
+                    bold_style,
+                ),
+                Paragraph(
+                    f'<font name="{font_bold}" size="12" '
+                    f'color="#7A2028"><b>'
+                    f'{brl(display_total_cents)}'
+                    f'</b></font>',
+                    right_style,
+                ),
+            ]
+        ],
+        colWidths=[
+            126 * mm,
+            55 * mm,
+        ],
+    )
+
+    final_total_table.setStyle(
+        TableStyle(
+            [
+                ("ALIGN", (1, 0), (1, 0), "RIGHT"),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 (
                     "BACKGROUND",
-                    (0, -1),
+                    (0, 0),
                     (-1, -1),
                     colors.HexColor("#F4ECE9"),
                 ),
                 (
-                    "TEXTCOLOR",
-                    (0, -1),
+                    "BOX",
+                    (0, 0),
                     (-1, -1),
+                    0.75,
                     colors.HexColor("#7A2028"),
                 ),
+                ("LEFTPADDING", (0, 0), (-1, -1), 7),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+                ("TOPPADDING", (0, 0), (-1, -1), 7),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
                 (
-                    "LINEABOVE",
-                    (0, -1),
+                    "TEXTCOLOR",
+                    (0, 0),
                     (-1, -1),
-                    1,
                     colors.HexColor("#7A2028"),
                 ),
             ]
         )
     )
 
-    story.append(
-        KeepTogether(
-            [
-                Paragraph("RESUMO", section_style),
-                totals_table,
-            ]
-        )
-    )
+    story.append(final_total_table)
+    story.append(Spacer(1, 3 * mm))
 
 
     if warranty:
