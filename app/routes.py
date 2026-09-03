@@ -693,6 +693,10 @@ def quote_detail(quote_id):
         if quote["manual_total_cents"] is not None
         else calculated_total_cents
     )
+    items = distribute_final_total_between_items(
+        items,
+        display_total_cents,
+    )
     manual_adjustment_cents = (
         display_total_cents
         - calculated_total_cents
@@ -850,6 +854,10 @@ def export_quote_pdf(quote_id):
         quote["manual_total_cents"]
         if quote["manual_total_cents"] is not None
         else calculated_total_cents
+    )
+    items = distribute_final_total_between_items(
+        items,
+        display_total_cents,
     )
 
     def brl(cents):
@@ -1975,6 +1983,73 @@ def calculate_items_pricing(items, components_by_item):
 
     return priced_items
 
+def distribute_final_total_between_items(
+    items,
+    final_total_cents,
+):
+    if not items:
+        return items
+
+    unit_cents = (
+        100
+        if final_total_cents % 100 == 0
+        else 1
+    )
+    final_units = final_total_cents // unit_cents
+    weights = [
+        max(item["total_cents"], 0)
+        for item in items
+    ]
+    total_weight = sum(weights)
+
+    if total_weight == 0:
+        weights = [1 for item in items]
+        total_weight = len(items)
+
+    allocated_units = []
+    remainders = []
+
+    for weight in weights:
+        proportional_value = final_units * weight
+        allocated_units.append(
+            proportional_value // total_weight
+        )
+        remainders.append(
+            proportional_value % total_weight
+        )
+
+    remaining_units = (
+        final_units
+        - sum(allocated_units)
+    )
+    priority_order = sorted(
+        range(len(items)),
+        key=lambda index: (
+            remainders[index],
+            weights[index],
+            -index,
+        ),
+        reverse=True,
+    )
+
+    for index in priority_order[:remaining_units]:
+        allocated_units[index] += 1
+
+    for index, item in enumerate(items):
+        commercial_total_cents = (
+            allocated_units[index]
+            * unit_cents
+        )
+        item["commercial_total_cents"] = (
+            commercial_total_cents
+        )
+        item["commercial_adjustment_cents"] = (
+            commercial_total_cents
+            - item["total_cents"]
+        )
+
+    return items
+
 @main.route(
     "/orcamentos/<int:quote_id>/condicoes",
     methods=("GET", "POST"),
@@ -2884,6 +2959,8 @@ def edit_quote_final_total(quote_id):
 
             if error is None and manual_total_cents <= 0:
                 error = "O valor final deve ser maior que zero."
+            elif error is None and manual_total_cents % 100 != 0:
+                error = "Informe um valor inteiro, sem centavos."
 
         if error is None:
             db.execute(
