@@ -4,7 +4,7 @@ import time
 import webbrowser
 
 from app import create_app
-from app.db import init_db
+from app.db import init_db, migrate_db
 
 
 app = create_app()
@@ -13,9 +13,11 @@ app = create_app()
 def ensure_database():
     database_path = app.config["DATABASE"]
 
-    if not os.path.exists(database_path):
-        with app.app_context():
+    with app.app_context():
+        if not os.path.exists(database_path):
             init_db()
+        else:
+            migrate_db()
 
 
 def open_browser():

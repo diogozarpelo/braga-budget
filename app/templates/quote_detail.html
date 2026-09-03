@@ -56,7 +56,7 @@
     </div>
 {% endif %}
 
-<section class="card">
+<section class="card quote-client-card">
     <h3>Cliente</h3>
 
     <div class="detail-grid">
@@ -71,22 +71,22 @@
         </div>
 
         <div class="detail-item detail-full">
-            <span>Endereço</span>
+            <span>Endere&ccedil;o</span>
             <strong>{{ quote["client_address"] or "Não informado" }}</strong>
         </div>
     </div>
 </section>
 
-<section class="card" id="quote-conditions">
+<section class="card quote-conditions-card" id="quote-conditions">
     <div class="section-toolbar">
-        <h3>Condições do orçamento</h3>
+        <h3>Condi&ccedil;&otilde;es do or&ccedil;amento</h3>
 
         {% if quote["status"] == "draft" %}
             <a
                 class="button button-secondary"
                 href="{{ url_for('main.edit_quote_conditions', quote_id=quote['id']) }}"
             >
-                Editar condições
+                Editar condi&ccedil;&otilde;es
             </a>
         {% endif %}
     </div>
@@ -98,13 +98,8 @@
         </div>
 
         <div class="detail-item">
-            <span>Prazo de execução</span>
+            <span>Prazo de execu&ccedil;&atilde;o</span>
             <strong>{{ quote["execution_days"] }} dias</strong>
-        </div>
-
-        <div class="detail-item">
-            <span>Mão de obra</span>
-            <strong>{{ quote["labor_percentage"]|int }}% dos materiais</strong>
         </div>
 
         <div class="detail-item">
@@ -120,12 +115,12 @@
 
     <div class="condition-texts">
         <div class="condition-text">
-            <span>Forma e condições de pagamento</span>
+            <span>Forma e condi&ccedil;&otilde;es de pagamento</span>
             <p>{{ quote["payment_terms"] or "Não informado" }}</p>
         </div>
 
         <div class="condition-text">
-            <span>Observações</span>
+            <span>Observa&ccedil;&otilde;es</span>
             <p>{{ quote["notes"] or "Nenhuma observação" }}</p>
         </div>
 
@@ -135,7 +130,6 @@
         </div>
     </div>
 </section>
-
 <section class="card" id="quote-items">
     <div class="section-toolbar">
         <div class="section-heading">
@@ -157,7 +151,7 @@
 
         <div class="quote-items-list">
             {% for item in items %}
-                <article class="quote-item-card">
+                <article class="quote-item-card" id="quote-item-{{ item['id'] }}">
                     <div class="quote-item-main">
                         <div class="quote-item-heading">
                             <div>
@@ -327,6 +321,34 @@
                                 Nenhum componente adicionado a este item.
                             </p>
                         {% endif %}
+                    </div>
+
+                    <div class="item-labor">
+                        <div class="item-labor-info">
+                            <span>M&atilde;o de obra deste item</span>
+                        </div>
+
+                        <div class="item-labor-value">
+                            <strong>{{ item["labor_cents"]|brl }}</strong>
+
+                            {% if quote["status"] == "draft" %}
+                                <a
+                                    class="component-edit labor-edit-button"
+                                    href="{{ url_for(
+                                        'main.edit_quote_item_labor',
+                                        quote_id=quote['id'],
+                                        item_id=item['id']
+                                    ) }}"
+                                >
+                                    Editar
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="quote-item-total">
+                        <span>Total do item</span>
+                        <strong>{{ item["total_cents"]|brl }}</strong>
                     </div>
                 </article>
             {% endfor %}

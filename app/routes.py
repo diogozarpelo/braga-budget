@@ -610,6 +610,7 @@ def quote_detail(quote_id):
             glass_color,
             finish,
             glass_price_per_m2_cents,
+            manual_labor_cents,
             CAST(
                 ROUND(
                     charged_area_m2
@@ -657,21 +658,32 @@ def quote_detail(quote_id):
     for component in components:
         components_by_item[component["quote_item_id"]].append(component)
 
+    items = calculate_items_pricing(
+        items,
+        components_by_item,
+    )
+
     glass_subtotal_cents = sum(
         item["glass_total_cents"]
         for item in items
     )
     components_subtotal_cents = sum(
-        component["total_cents"]
-        for component in components
+        item["components_total_cents"]
+        for item in items
     )
-    materials_subtotal_cents = (
-        glass_subtotal_cents
-        + components_subtotal_cents
+    materials_subtotal_cents = sum(
+        item["materials_total_cents"]
+        for item in items
     )
+    labor_cents = sum(
+        item["labor_cents"]
+        for item in items
+    )
+
     price_breakdown = calculate_price_breakdown(
         materials_subtotal_cents,
         quote,
+        labor_cents,
     )
     calculated_total_cents = price_breakdown[
         "calculated_total_cents"
@@ -756,6 +768,7 @@ def export_quote_pdf(quote_id):
             glass_color,
             finish,
             glass_price_per_m2_cents,
+            manual_labor_cents,
             CAST(
                 ROUND(
                     charged_area_m2
@@ -801,24 +814,32 @@ def export_quote_pdf(quote_id):
     for component in components:
         components_by_item[component["quote_item_id"]].append(component)
 
+    items = calculate_items_pricing(
+        items,
+        components_by_item,
+    )
+
     glass_subtotal_cents = sum(
         item["glass_total_cents"]
         for item in items
     )
-
     components_subtotal_cents = sum(
-        component["total_cents"]
-        for component in components
+        item["components_total_cents"]
+        for item in items
     )
-
-    materials_subtotal_cents = (
-        glass_subtotal_cents
-        + components_subtotal_cents
+    materials_subtotal_cents = sum(
+        item["materials_total_cents"]
+        for item in items
+    )
+    labor_cents = sum(
+        item["labor_cents"]
+        for item in items
     )
 
     price_breakdown = calculate_price_breakdown(
         materials_subtotal_cents,
         quote,
+        labor_cents,
     )
 
     calculated_total_cents = price_breakdown[
@@ -1912,6 +1933,48 @@ def percentage_of_cents(base_cents, percentage):
     )
 
 
+def calculate_items_pricing(items, components_by_item):
+    priced_items = []
+
+    for item_row in items:
+        item = dict(item_row)
+        item_components = components_by_item.get(
+            item["id"],
+            [],
+        )
+        components_total_cents = sum(
+            component["total_cents"]
+            for component in item_components
+        )
+        materials_total_cents = (
+            item["glass_total_cents"]
+            + components_total_cents
+        )
+        automatic_labor_cents = percentage_of_cents(
+            materials_total_cents,
+            50,
+        )
+        labor_cents = (
+            item["manual_labor_cents"]
+            if item["manual_labor_cents"] is not None
+            else automatic_labor_cents
+        )
+
+        item["components_total_cents"] = components_total_cents
+        item["materials_total_cents"] = materials_total_cents
+        item["automatic_labor_cents"] = automatic_labor_cents
+        item["labor_cents"] = labor_cents
+        item["labor_is_manual"] = (
+            item["manual_labor_cents"] is not None
+        )
+        item["total_cents"] = (
+            materials_total_cents
+            + labor_cents
+        )
+        priced_items.append(item)
+
+    return priced_items
+
 @main.route(
     "/orcamentos/<int:quote_id>/condicoes",
     methods=("GET", "POST"),
@@ -1950,9 +2013,6 @@ def edit_quote_conditions(quote_id):
             execution_days = int(
                 request.form.get("execution_days", "")
             )
-            labor_percentage = parse_decimal(
-                request.form.get("labor_percentage", "")
-            )
             difficulty_percentage = parse_decimal(
                 request.form.get("difficulty_percentage", "")
             )
@@ -1966,8 +2026,6 @@ def edit_quote_conditions(quote_id):
             error = "A validade deve ser maior que zero."
         elif error is None and execution_days <= 0:
             error = "O prazo de execução deve ser maior que zero."
-        elif error is None and labor_percentage < 0:
-            error = "A mão de obra não pode ser negativa."
         elif error is None and not 0 <= difficulty_percentage <= 100:
             error = "O adicional de dificuldade deve ficar entre 0% e 100%."
         elif error is None and not 0 <= discount_percentage <= 100:
@@ -1983,7 +2041,6 @@ def edit_quote_conditions(quote_id):
                     payment_terms = ?,
                     notes = ?,
                     warranty_text = ?,
-                    labor_percentage = ?,
                     difficulty_percentage = ?,
                     discount_percentage = ?,
                     updated_at = CURRENT_TIMESTAMP
@@ -1995,7 +2052,6 @@ def edit_quote_conditions(quote_id):
                     payment_terms,
                     notes,
                     warranty_text,
-                    float(labor_percentage),
                     float(difficulty_percentage),
                     float(discount_percentage),
                     quote_id,
@@ -2018,6 +2074,141 @@ def edit_quote_conditions(quote_id):
     )
 
 
+
+@main.route(
+    "/orcamentos/<int:quote_id>/itens/<int:item_id>/mao-de-obra",
+    methods=("GET", "POST"),
+)
+def edit_quote_item_labor(quote_id, item_id):
+    db = get_db()
+
+    quote = db.execute(
+        """
+        SELECT
+            quotes.id,
+            quotes.status,
+            clients.name AS client_name
+        FROM quotes
+        JOIN clients ON clients.id = quotes.client_id
+        WHERE quotes.id = ?
+        """,
+        (quote_id,),
+    ).fetchone()
+
+    item = db.execute(
+        """
+        SELECT
+            quote_items.*,
+            CAST(
+                ROUND(
+                    charged_area_m2
+                    * quantity
+                    * glass_price_per_m2_cents
+                )
+                AS INTEGER
+            ) AS glass_total_cents
+        FROM quote_items
+        WHERE id = ? AND quote_id = ?
+        """,
+        (item_id, quote_id),
+    ).fetchone()
+
+    if quote is None or item is None:
+        abort(404)
+
+    if quote["status"] != "draft":
+        abort(400)
+
+    components_total_cents = db.execute(
+        """
+        SELECT COALESCE(
+            SUM(quantity * unit_price_cents),
+            0
+        )
+        FROM quote_item_components
+        WHERE quote_item_id = ?
+        """,
+        (item_id,),
+    ).fetchone()[0]
+
+    materials_total_cents = (
+        item["glass_total_cents"]
+        + components_total_cents
+    )
+    automatic_labor_cents = percentage_of_cents(
+        materials_total_cents,
+        50,
+    )
+    current_labor_cents = (
+        item["manual_labor_cents"]
+        if item["manual_labor_cents"] is not None
+        else automatic_labor_cents
+    )
+
+    error = None
+
+    if request.method == "POST":
+        labor_mode = request.form.get("labor_mode", "manual")
+
+        if labor_mode == "automatic":
+            manual_labor_cents = None
+        else:
+            try:
+                manual_labor_cents = money_to_cents(
+                    request.form.get("labor_value", "")
+                )
+            except InvalidOperation:
+                error = "Informe corretamente o valor da mão de obra."
+                manual_labor_cents = None
+
+            if error is None and manual_labor_cents < 0:
+                error = "A mão de obra não pode ser negativa."
+
+        if error is None:
+            db.execute(
+                """
+                UPDATE quote_items
+                SET
+                    manual_labor_cents = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ? AND quote_id = ?
+                """,
+                (
+                    manual_labor_cents,
+                    item_id,
+                    quote_id,
+                ),
+            )
+            db.execute(
+                """
+                UPDATE quotes
+                SET
+                    manual_total_cents = NULL,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+                """,
+                (quote_id,),
+            )
+            db.commit()
+
+            return redirect(
+                url_for(
+                    "main.quote_detail",
+                    quote_id=quote_id,
+                    _anchor=f"quote-item-{item_id}",
+                )
+            )
+
+    return render_template(
+        "edit_quote_item_labor.html",
+        quote=quote,
+        item=item,
+        components_total_cents=components_total_cents,
+        materials_total_cents=materials_total_cents,
+        automatic_labor_cents=automatic_labor_cents,
+        current_labor_cents=current_labor_cents,
+        error=error,
+    )
 
 @main.route(
     "/orcamentos/<int:quote_id>/itens/<int:item_id>/editar",
@@ -2337,11 +2528,14 @@ def remove_quote_item_component(
 def calculate_price_breakdown(
     materials_subtotal_cents,
     quote,
+    labor_cents=None,
 ):
-    labor_cents = percentage_of_cents(
-        materials_subtotal_cents,
-        quote["labor_percentage"],
-    )
+    if labor_cents is None:
+        labor_cents = percentage_of_cents(
+            materials_subtotal_cents,
+            quote["labor_percentage"],
+        )
+
     subtotal_with_labor_cents = (
         materials_subtotal_cents
         + labor_cents
@@ -2369,7 +2563,6 @@ def calculate_price_breakdown(
         "discount_cents": discount_cents,
         "calculated_total_cents": calculated_total_cents,
     }
-
 
 
 @main.post("/orcamentos/<int:quote_id>/remover-rascunho")
@@ -2618,6 +2811,49 @@ def edit_quote_final_total(quote_id):
         (quote_id,),
     ).fetchone()[0]
 
+    labor_total_cents = db.execute(
+        """
+        SELECT COALESCE(
+            SUM(
+                COALESCE(
+                    quote_items.manual_labor_cents,
+                    CAST(
+                        ROUND(
+                            (
+                                CAST(
+                                    ROUND(
+                                        quote_items.charged_area_m2
+                                        * quote_items.quantity
+                                        * quote_items.glass_price_per_m2_cents
+                                    )
+                                    AS INTEGER
+                                )
+                                + COALESCE(
+                                    (
+                                        SELECT SUM(
+                                            component.quantity
+                                            * component.unit_price_cents
+                                        )
+                                        FROM quote_item_components AS component
+                                        WHERE component.quote_item_id = quote_items.id
+                                    ),
+                                    0
+                                )
+                            )
+                            * 0.5
+                        )
+                        AS INTEGER
+                    )
+                )
+            ),
+            0
+        )
+        FROM quote_items
+        WHERE quote_items.quote_id = ?
+        """,
+        (quote_id,),
+    ).fetchone()[0]
+
     materials_subtotal_cents = (
         glass_total_cents
         + components_total_cents
@@ -2625,6 +2861,7 @@ def edit_quote_final_total(quote_id):
     price_breakdown = calculate_price_breakdown(
         materials_subtotal_cents,
         quote,
+        labor_total_cents,
     )
     calculated_total_cents = price_breakdown[
         "calculated_total_cents"

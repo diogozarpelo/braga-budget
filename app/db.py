@@ -1,4 +1,4 @@
-﻿import sqlite3
+import sqlite3
 
 import click
 from flask import current_app, g
@@ -20,12 +20,41 @@ def close_db(error=None):
         db.close()
 
 
+def migrate_db():
+    db = get_db()
+
+    quote_item_columns = {
+        row["name"]
+        for row in db.execute(
+            "PRAGMA table_info(quote_items)"
+        ).fetchall()
+    }
+
+    if (
+        quote_item_columns
+        and "manual_labor_cents" not in quote_item_columns
+    ):
+        db.execute(
+            """
+            ALTER TABLE quote_items
+            ADD COLUMN manual_labor_cents INTEGER
+                CHECK (
+                    manual_labor_cents IS NULL
+                    OR manual_labor_cents >= 0
+                )
+            """
+        )
+
+    db.commit()
+
+
 def init_db():
     db = get_db()
 
     with current_app.open_resource("schema.sql") as schema_file:
         db.executescript(schema_file.read().decode("utf-8"))
 
+    migrate_db()
     db.commit()
 
 

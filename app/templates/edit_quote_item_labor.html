@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Editar m&atilde;o de obra | Vidra&ccedil;aria Braga{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Or&ccedil;amento de {{ quote["client_name"] }}</p>
+        <h2>Editar m&atilde;o de obra</h2>
+        <p>Ajuste a m&atilde;o de obra exclusivamente para este item.</p>
+    </div>
+
+    <a
+        class="button button-secondary"
+        href="{{ url_for('main.quote_detail', quote_id=quote['id'], _anchor='quote-item-' ~ item['id']) }}"
+    >
+        Voltar ao rascunho
+    </a>
+</section>
+
+<section class="card">
+    {% if error %}
+        <p class="alert alert-error">{{ error }}</p>
+    {% endif %}
+
+    <div class="labor-item-identification">
+        <span>Item</span>
+        <strong>{{ item["service_type"] }}</strong>
+
+        {% if item["description"] %}
+            <p>{{ item["description"] }}</p>
+        {% endif %}
+    </div>
+
+    <div class="labor-calculation-grid">
+        <div>
+            <span>Total do vidro</span>
+            <strong>{{ item["glass_total_cents"]|brl }}</strong>
+        </div>
+
+        <div>
+            <span>Total dos componentes</span>
+            <strong>{{ components_total_cents|brl }}</strong>
+        </div>
+
+        <div>
+            <span>Base dos materiais</span>
+            <strong>{{ materials_total_cents|brl }}</strong>
+        </div>
+
+        <div class="labor-automatic-value">
+            <span>M&atilde;o de obra autom&aacute;tica (50%)</span>
+            <strong>{{ automatic_labor_cents|brl }}</strong>
+        </div>
+    </div>
+
+    <form method="post" class="form-grid labor-edit-form" autocomplete="off">
+        <input type="hidden" name="labor_mode" id="labor-mode" value="manual">
+        <label class="field field-full">
+            <span>Valor da m&atilde;o de obra *</span>
+            <input
+                type="text"
+                id="labor-value"
+                name="labor_value"
+                value="{{ request.form.get('labor_value', '%.2f'|format(current_labor_cents / 100)|replace('.', ',')) }}"
+                placeholder="Ex.: 500,00"
+                inputmode="decimal"
+                required
+                autofocus
+            >
+        </label>
+
+        <div class="info-box field-full">
+            O valor autom&aacute;tico corresponde a 50% da soma do vidro com os componentes deste item.
+        </div>
+
+        <div class="form-actions field-full labor-edit-actions">
+            <a
+                class="button button-secondary"
+                href="{{ url_for('main.quote_detail', quote_id=quote['id'], _anchor='quote-item-' ~ item['id']) }}"
+            >
+                Cancelar
+            </a>
+
+            <button
+                class="button button-secondary"
+                id="use-automatic-labor"
+                type="button"
+                data-automatic-value="{{ '%.2f'|format(automatic_labor_cents / 100)|replace('.', ',') }}"
+            >
+                Usar valor autom&aacute;tico
+            </button>
+
+            <button
+                type="submit"
+                name="action"
+                value="save"
+            >
+                Salvar m&atilde;o de obra
+            </button>
+        </div>
+    </form>
+</section>
+{% endblock %}

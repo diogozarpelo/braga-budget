@@ -80,6 +80,8 @@ CREATE TABLE IF NOT EXISTS quote_items (
     finish TEXT NOT NULL DEFAULT '',
     glass_price_per_m2_cents INTEGER NOT NULL DEFAULT 0
         CHECK (glass_price_per_m2_cents >= 0),
+    manual_labor_cents INTEGER
+        CHECK (manual_labor_cents IS NULL OR manual_labor_cents >= 0),
     position INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -49,16 +49,7 @@
             >
         </label>
 
-        <label class="field">
-            <span>Mão de obra sobre os materiais (%) *</span>
-            <input
-                type="text"
-                name="labor_percentage"
-                value="{{ request.form.get('labor_percentage', '%g'|format(quote['labor_percentage'])) }}"
-                inputmode="decimal"
-                required
-            >
-        </label>
+        
 
         <label class="field">
             <span>Adicional de dificuldade (%) *</span>

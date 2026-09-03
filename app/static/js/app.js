@@ -1,4 +1,4 @@
-﻿function formatPhone(value) {
+function formatPhone(value) {
     const digits = value.replace(/\D/g, "").slice(0, 11);
 
     if (digits.length === 0) {
@@ -600,5 +600,29 @@ if (quoteExportModal) {
             quoteExportModal.hidden = true;
             document.body.classList.remove("modal-open");
         }
+    });
+}
+
+const useAutomaticLaborButton = document.querySelector(
+    "#use-automatic-labor"
+);
+const laborValueInput = document.querySelector("#labor-value");
+const laborModeInput = document.querySelector("#labor-mode");
+
+if (
+    useAutomaticLaborButton
+    && laborValueInput
+    && laborModeInput
+) {
+    useAutomaticLaborButton.addEventListener("click", () => {
+        laborValueInput.value =
+            useAutomaticLaborButton.dataset.automaticValue;
+        laborModeInput.value = "automatic";
+        laborValueInput.focus();
+        laborValueInput.select();
+    });
+
+    laborValueInput.addEventListener("input", () => {
+        laborModeInput.value = "manual";
     });
 }
