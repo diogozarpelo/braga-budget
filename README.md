@@ -310,9 +310,13 @@ O banco de dados do usuário não fica armazenado dentro da pasta do programa.
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
-### ✅ v1.0 — Aplicação local
+O desenvolvimento do Braga Budget está organizado em etapas progressivas. A prioridade é estabilizar cada fase antes de avançar para a próxima, mantendo o projeto utilizável durante toda a evolução.
+
+### Etapa 1 - v1.0 local
+
+Primeira versão funcional preparada para uso real em ambiente Windows.
 
 - [x] Gestão de clientes
 - [x] Gestão de componentes
@@ -331,34 +335,171 @@ O banco de dados do usuário não fica armazenado dentro da pasta do programa.
 - [x] Executável Windows
 - [x] Instalador Windows
 
-### ☁️ Próxima etapa — Cloud
+### Etapa 2 - Validação em uso real
 
-- [ ] Migrar o banco de dados para PostgreSQL
-- [ ] Hospedar o backend
-- [ ] Centralizar os dados
+Após a entrega da v1.0, a aplicação entra em um período de utilização real antes das mudanças estruturais.
+
+- [ ] Utilizar o sistema no fluxo real de trabalho
+- [ ] Registrar bugs encontrados
+- [ ] Identificar dificuldades de usabilidade
+- [ ] Coletar sugestões de melhoria
+- [ ] Validar cálculos com orçamentos reais
+- [ ] Validar emissão, PDF e PNG
+- [ ] Organizar e priorizar o feedback recebido
+
+**Janela inicial prevista:** aproximadamente 1 semana de uso real, ajustável conforme o volume de utilização.
+
+### Etapa 3 - Estabilização da v1.0
+
+- [ ] Corrigir bugs identificados
+- [ ] Refinar pontos de UX
+- [ ] Revisar validações
+- [ ] Revisar mensagens de erro
+- [ ] Validar persistência dos dados
+- [ ] Validar novamente PDF e PNG
+- [ ] Criar versão estável
+- [ ] Criar tag/release `v1.0.0` no GitHub
+
+### Etapa 4 - Testes automatizados
+
+Ampliar a segurança das futuras mudanças por meio de testes automatizados.
+
+- [ ] Testar cálculos de vidro
+- [ ] Testar componentes
+- [ ] Testar mão de obra
+- [ ] Testar adicionais e descontos
+- [ ] Testar distribuição proporcional do valor final
+- [ ] Testar emissão de orçamento
+- [ ] Testar regras de status
+- [ ] Criar testes das principais rotas
+- [ ] Criar testes de integração com o banco de dados
+
+### Etapa 5 - Preparação para produção
+
+Antes de expor a aplicação à internet:
+
+- [ ] Separar configurações de desenvolvimento e produção
+- [ ] Adotar variáveis de ambiente
+- [ ] Manter informações sensíveis fora do código
+- [ ] Implementar tratamento adequado de erros
+- [ ] Implementar logs
+- [ ] Revisar validação de entradas
+- [ ] Adicionar proteção CSRF
+- [ ] Revisar sessões e cookies
+- [ ] Definir estratégia de backup
+- [ ] Preparar servidor adequado para Flask em produção
+- [ ] Realizar revisão geral de segurança
+
+### Etapa 6 - Migração para PostgreSQL
+
+- [ ] Configurar PostgreSQL no ambiente de desenvolvimento
+- [ ] Adaptar a camada de acesso aos dados
+- [ ] Revisar consultas específicas do SQLite
+- [ ] Testar todas as operações utilizando PostgreSQL
+- [ ] Criar processo de migração do banco atual
+- [ ] Migrar clientes, componentes e orçamentos
+- [ ] Validar integridade dos dados após a migração
+
+### Etapa 7 - Infraestrutura em nuvem
+
+- [ ] Escolher o provedor de hospedagem
+- [ ] Provisionar PostgreSQL em nuvem
+- [ ] Hospedar o backend Flask
+- [ ] Configurar variáveis de ambiente
+- [ ] Configurar HTTPS
+- [ ] Configurar logs de produção
+- [ ] Configurar backups
+- [ ] Testar acesso externo
+- [ ] Validar estabilidade
+- [ ] Migrar os dados reais da versão local
+
+### Etapa 8 - Autenticação e controle de acesso
+
+- [ ] Criar estrutura de usuários
+- [ ] Implementar armazenamento seguro de senhas
+- [ ] Implementar login e logout
+- [ ] Proteger rotas autenticadas
+- [ ] Implementar controle de sessão
+- [ ] Implementar autorização
+- [ ] Revisar segurança dos cookies
+- [ ] Criar fluxo de alteração de senha
+
+### Etapa 9 - API
+
+- [ ] Definir a arquitetura da API
+- [ ] Criar endpoints de clientes
+- [ ] Criar endpoints de componentes
+- [ ] Criar endpoints de orçamentos
+- [ ] Criar endpoints de itens
+- [ ] Padronizar respostas JSON
+- [ ] Utilizar corretamente códigos HTTP
+- [ ] Padronizar respostas de erro
+- [ ] Integrar autenticação
+- [ ] Definir versionamento da API
+
+Exemplos planejados:
+
+    GET    /api/clients
+    POST   /api/clients
+    GET    /api/quotes
+    POST   /api/quotes
+    GET    /api/quotes/{id}
+    PUT    /api/quotes/{id}
+
+### Etapa 10 - Documentação da API
+
+- [ ] Documentar endpoints
+- [ ] Documentar parâmetros
+- [ ] Documentar requests e responses
+- [ ] Documentar códigos de erro
+- [ ] Documentar autenticação
+- [ ] Adotar OpenAPI / Swagger
+- [ ] Manter a documentação sincronizada com a implementação
+
+### Etapa 11 - Evolução arquitetural
+
+Objetivos:
+
+- [ ] Separar regras de negócio das rotas
+- [ ] Criar camada de serviços
+- [ ] Criar camada de acesso a dados
+- [ ] Reutilizar regras entre Web e API
+- [ ] Reduzir acoplamento
+- [ ] Facilitar testes e manutenção
+
+Estrutura planejada:
+
+    app/
+    |-- api/
+    |-- models/
+    |-- repositories/
+    |-- routes/
+    |-- services/
+    |-- static/
+    `-- templates/
+
+### Etapa 12 - Braga Budget v2.0 Android
+
+- [ ] Definir arquitetura do aplicativo Android
 - [ ] Implementar autenticação
-- [ ] Preparar endpoints de API
-- [ ] Adaptar o sistema web para operação online
-- [ ] Preparar infraestrutura para múltiplos dispositivos
-
-### 📱 v2.0 — Android
-
-- [ ] Desenvolver aplicativo Android
-- [ ] Criar orçamentos pelo celular
-- [ ] Consultar clientes e orçamentos
+- [ ] Consultar clientes
+- [ ] Cadastrar clientes
+- [ ] Criar orçamentos
+- [ ] Editar orçamentos
+- [ ] Consultar histórico
 - [ ] Consumir a API central
-- [ ] Sincronizar web e mobile
-- [ ] Compartilhar PDF e imagem pelo dispositivo móvel
+- [ ] Compartilhar PDF e PNG
+- [ ] Sincronizar dados entre Web e Android
+- [ ] Tratar indisponibilidade de conexão
+- [ ] Preparar distribuição do aplicativo
 
-Arquitetura planejada:
+Arquitetura alvo:
 
-```text
-Web ───────┐
-           │
-           ├── Flask / API ─── PostgreSQL
-           │
-Android ───┘
-```
+    Web --------+
+                |
+                +--> Flask / API --> PostgreSQL
+                |
+    Android ----+
 
 ---
 
