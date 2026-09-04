@@ -503,21 +503,23 @@ Arquitetura alvo:
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
-A documentação visual do projeto será adicionada gradualmente.
+### Tela inicial
 
-Imagens planejadas:
+![Tela inicial do Braga Budget](docs/screenshots/01-home.png)
 
-- página inicial
-- gerenciamento de clientes
-- gerenciamento de componentes
-- criação do orçamento
-- composição dos itens
-- mão de obra individual
-- resumo do orçamento
-- orçamento emitido
-- PDF comercial
+### Gerenciamento de clientes
+
+![Gerenciamento de clientes](docs/screenshots/02-clients.png)
+
+### Detalhe do orçamento
+
+![Detalhe do orçamento](docs/screenshots/03-quote-detail.png)
+
+### Orçamento comercial
+
+![Orçamento comercial](docs/screenshots/04-quote-pdf.png)
 
 ---
 
