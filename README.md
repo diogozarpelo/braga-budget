@@ -1,296 +1,215 @@
 # Braga Budget
 
-Sistema de orçamentos desenvolvido para agilizar, organizar e padronizar a criação de propostas comerciais para serviços de vidraçaria.
+<p align="center">
+  Sistema de orçamentos para vidraçaria, com cálculos comerciais, gestão de clientes e geração de propostas em PDF e PNG.
+</p>
 
-O projeto nasceu de uma necessidade real de operação da **Vidraçaria Braga** e foi desenvolvido por **Diogo Zarpelão**, reunindo regras de negócio, automação de cálculos, gestão de clientes e geração de propostas comerciais em uma única aplicação.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Flask-3.1.3-000000?logo=flask&logoColor=white" alt="Flask">
+  <img src="https://img.shields.io/badge/JavaScript-Vanilla-F7DF1E?logo=javascript&logoColor=black" alt="JavaScript">
+  <img src="https://img.shields.io/badge/SQLite-Local-003B57?logo=sqlite&logoColor=white" alt="SQLite">
+  <img src="https://img.shields.io/badge/Windows-Installer-0078D4?logo=windows&logoColor=white" alt="Windows">
+</p>
 
-> **Status:** v1.0 funcional — aplicação local para Windows
+## Demonstração visual
 
----
+### Home — Desktop
 
-## 📌 Sobre o projeto
+<p align="center">
+  <img src="docs/screenshots/01-home.png" alt="Tela inicial do Braga Budget" width="900">
+</p>
 
-O **Braga Budget** foi criado para substituir processos manuais de cálculo e montagem de orçamentos por um fluxo mais rápido, consistente e confiável.
+### Gerenciamento de clientes
 
-A aplicação permite cadastrar clientes, montar orçamentos com múltiplos serviços, calcular automaticamente materiais e mão de obra, realizar ajustes comerciais e gerar propostas prontas para envio em **PDF ou PNG**.
+<p align="center">
+  <img src="docs/screenshots/02-clients.png" alt="Gerenciamento de clientes do Braga Budget" width="900">
+</p>
 
-A versão 1.0 funciona localmente em Windows e utiliza um banco de dados SQLite persistente.
+### Detalhe do orçamento
 
----
+<p align="center">
+  <img src="docs/screenshots/03-quote-detail.png" alt="Detalhe de orçamento no Braga Budget" width="900">
+</p>
 
-## ✨ Principais funcionalidades
+### Proposta comercial
 
-- Cadastro e gerenciamento de clientes
-- Ativação e inativação de clientes
-- Cadastro e gerenciamento de componentes
-- Criação de orçamentos em rascunho
-- Múltiplos itens por orçamento
-- Diferentes tipos de serviços de vidraçaria
-- Cálculo automático da área do vidro
-- Cálculo individual de materiais por item
-- Componentes e acessórios por item
-- Mão de obra automática individual
-- Ajuste manual da mão de obra
-- Adicional de dificuldade
-- Aplicação de desconto
-- Ajuste manual do valor final
-- Distribuição proporcional do valor comercial entre os itens
-- Numeração automática dos orçamentos
-- Controle de validade
-- Controle de prazo de execução
-- Formas e condições de pagamento
-- Observações comerciais
-- Garantia
-- Emissão de orçamento
-- Controle de status
-- Proteção contra alterações após emissão
-- Exportação em PDF
-- Exportação em PNG
-- Executável para Windows
-- Instalador próprio para Windows
-- Banco de dados persistente separado da instalação
+<p align="center">
+  <img src="docs/screenshots/04-quote-pdf.png" alt="Proposta comercial gerada pelo Braga Budget" width="700">
+</p>
 
----
+## Sobre o projeto
 
-## 🔄 Fluxo principal
+O **Braga Budget** é uma aplicação web desenvolvida para agilizar e padronizar a criação de orçamentos para serviços de vidraçaria.
 
-```text
-Cliente
-   ↓
-Novo orçamento
-   ↓
-Itens / serviços
-   ↓
-Vidro + componentes
-   ↓
-Mão de obra por item
-   ↓
-Ajustes comerciais
-   ↓
-Valor final
-   ↓
-Emissão
-   ↓
-PDF / PNG
+O sistema nasceu de uma necessidade real de operação da **Vidraçaria Braga** e centraliza cadastro de clientes, componentes, montagem de serviços, cálculos comerciais, emissão de propostas e exportação de documentos.
+
+A versão atual funciona localmente em Windows, utilizando **Flask** no backend e **SQLite** para persistência dos dados.
+
+A aplicação também possui executável e instalador próprios para Windows.
+
+## Principais funcionalidades
+
+### Gestão
+
+- cadastro, edição, ativação e inativação de clientes;
+- cadastro e gerenciamento de componentes;
+- configuração dos dados da empresa;
+- numeração automática de orçamentos;
+- controle de status;
+- consulta de orçamentos emitidos.
+
+### Orçamentos
+
+- criação de orçamentos em rascunho;
+- múltiplos serviços por orçamento;
+- cálculo automático da área do vidro;
+- componentes individuais por item;
+- cálculo automático da mão de obra;
+- ajuste manual da mão de obra;
+- adicional de dificuldade;
+- aplicação de desconto;
+- ajuste manual do valor final;
+- distribuição proporcional do valor comercial entre os itens;
+- controle de validade e prazo de execução;
+- formas de pagamento;
+- observações e garantia;
+- bloqueio de alterações após emissão.
+
+### Exportação
+
+- proposta comercial em PDF;
+- exportação em PNG;
+- apresentação de valores comerciais consolidados;
+- preservação da composição interna de custos.
+
+## Fluxo da aplicação
+
+```mermaid
+flowchart TD
+    A[Cliente] --> B[Novo orcamento]
+    B --> C[Itens e servicos]
+    C --> D[Vidro e componentes]
+    D --> E[Mao de obra por item]
+    E --> F[Ajustes comerciais]
+    F --> G[Valor final]
+    G --> H[Emissao]
+    H --> I[PDF ou PNG]
 ```
 
----
+## Formação do valor
 
-## 🧮 Regras de negócio
-
-### Cálculo da área
-
-As medidas são informadas em milímetros e convertidas automaticamente para metros quadrados.
+Cada item possui sua própria composição interna.
 
 ```text
-Área = largura × altura / 1.000.000
+Vidro
+  + Componentes
+  + Mao de obra
+  + Ajustes comerciais
+        |
+        v
+Valor comercial do item
+        |
+        v
+Valor final do orcamento
 ```
 
-O cálculo considera também a quantidade de unidades do item.
+A mão de obra automática corresponde a **50% da soma do vidro com os componentes do item** e pode ser substituída manualmente.
 
----
+Quando o valor final é alterado, o sistema distribui a diferença proporcionalmente entre os itens.
 
-### Materiais
+A distribuição utiliza o valor original de cada item como peso e garante que a soma dos valores comerciais seja exatamente igual ao valor final apresentado ao cliente.
 
-Cada item pode possuir componentes próprios, como kits de instalação, roldanas, puxadores, fechaduras e outros materiais necessários ao serviço.
+## Proposta comercial
 
-Os componentes são cadastrados separadamente e utilizados durante a composição do orçamento.
+O PDF gerado apresenta somente as informações necessárias para a proposta:
 
----
+- identidade e dados da empresa;
+- número do orçamento;
+- dados do cliente;
+- validade;
+- prazo de execução;
+- forma de pagamento;
+- serviços;
+- descrição técnica;
+- valor comercial de cada item;
+- valor total;
+- garantia.
 
-### Mão de obra por item
+Componentes, mão de obra, descontos, adicionais e demais informações utilizadas internamente na formação do preço não são discriminados separadamente no documento comercial.
 
-Cada item do orçamento possui sua própria mão de obra.
+## Tecnologias
 
-O valor automático corresponde a:
+| Camada | Tecnologias |
+|---|---|
+| Backend | Python, Flask 3.1.3 |
+| Frontend | HTML5, CSS3, JavaScript, Jinja2 |
+| Banco de dados | SQLite |
+| PDF | ReportLab |
+| Imagens | PyMuPDF, Pillow |
+| Executável | PyInstaller |
+| Instalador | Inno Setup |
+| Versionamento | Git, GitHub |
+| Documentação | Markdown |
 
-```text
-Mão de obra = 50% do valor do vidro + componentes do item
-```
-
-O sistema também permite substituir esse valor por uma mão de obra definida manualmente.
-
----
-
-### Ajuste comercial do valor final
-
-O orçamento possui um valor calculado internamente, mas o usuário pode definir um valor comercial final.
-
-Quando isso acontece, o Braga Budget distribui a diferença proporcionalmente entre os itens do orçamento.
-
-A distribuição utiliza o peso original de cada item e garante que:
-
-```text
-Soma dos valores comerciais dos itens = valor final do orçamento
-```
-
-Diferenças provocadas por arredondamento são resolvidas automaticamente.
-
-Dessa forma, a proposta apresentada ao cliente mantém valores coerentes sem expor a composição interna de custos.
-
----
-
-## 📄 PDF comercial
-
-O Braga Budget gera uma proposta comercial pronta para apresentação ao cliente.
-
-O documento contém:
-
-- identidade visual da empresa
-- número do orçamento
-- dados do cliente
-- validade
-- prazo de execução
-- forma de pagamento
-- serviços contratados
-- descrição técnica
-- valor comercial individual dos serviços
-- valor total da proposta
-- garantia
-
-Informações utilizadas internamente para formação do preço não são discriminadas no documento comercial.
-
-Isso inclui:
-
-- custo individual dos componentes
-- subtotal do vidro
-- mão de obra interna
-- adicional de dificuldade
-- desconto
-- ajustes e arredondamentos
-
----
-
-## 🖼️ Exportação em imagem
-
-Além do PDF, o orçamento pode ser exportado em **PNG**.
-
-A imagem é produzida a partir do próprio documento comercial, mantendo o mesmo conteúdo e identidade visual.
-
-Essa opção facilita o compartilhamento direto por aplicativos de mensagens.
-
----
-
-## 🛠️ Tecnologias utilizadas
-
-### Backend
-
-- Python
-- Flask 3
-- SQLite
-
-### Frontend
-
-- HTML5
-- CSS3
-- JavaScript
-- Jinja2
-
-### Geração de documentos
-
-- ReportLab
-- PyMuPDF
-- Pillow
-
-### Distribuição para Windows
-
-- PyInstaller
-- Inno Setup
-
-### Versionamento
-
-- Git
-- GitHub
-
----
-
-## 📁 Estrutura do projeto
+## Estrutura principal
 
 ```text
 braga-budget/
-│
-├── app/
-│   ├── static/
-│   │   ├── css/
-│   │   ├── icons/
-│   │   ├── images/
-│   │   └── js/
-│   │
-│   ├── templates/
-│   │
-│   ├── __init__.py
-│   ├── db.py
-│   ├── routes.py
-│   └── schema.sql
-│
-├── docs/
-├── tests/
-├── BragaBudget.iss
-├── requirements.txt
-├── run.py
-└── README.md
+|
+|-- app/
+|   |-- static/
+|   |   |-- css/
+|   |   |-- icons/
+|   |   |-- images/
+|   |   `-- js/
+|   |
+|   |-- templates/
+|   |-- __init__.py
+|   |-- db.py
+|   |-- routes.py
+|   `-- schema.sql
+|
+|-- docs/
+|   `-- screenshots/
+|
+|-- tests/
+|-- BragaBudget.iss
+|-- requirements.txt
+|-- run.py
+`-- README.md
 ```
 
----
+## Execução local
 
-## 💾 Banco de dados
+### Requisitos
 
-A versão 1.0 utiliza **SQLite**.
+- Python;
+- pip;
+- navegador moderno.
 
-### Ambiente de desenvolvimento
+### Backend
 
-```text
-instance/braga_budget.sqlite
-```
-
-### Aplicação instalada no Windows
-
-```text
-%LOCALAPPDATA%\BragaBudget\braga_budget.sqlite
-```
-
-O banco de dados da versão instalada fica separado dos arquivos do programa.
-
-Essa arquitetura permite preservar os dados durante atualizações ou reinstalações da aplicação.
-
----
-
-## 🚀 Executando o projeto em desenvolvimento
-
-### 1. Clone o repositório
-
-```bash
-git clone https://github.com/diogozarpelo/braga-budget.git
-cd braga-budget
-```
-
-### 2. Crie um ambiente virtual
-
-```bash
-python -m venv .venv
-```
-
-### 3. Ative o ambiente virtual
-
-No PowerShell:
+Crie e ative o ambiente virtual:
 
 ```powershell
+python -m venv .venv
 .venv\Scripts\Activate.ps1
 ```
 
-### 4. Instale as dependências
+Instale as dependências:
 
-```bash
+```powershell
 pip install -r requirements.txt
 ```
 
-### 5. Execute a aplicação
+Execute a aplicação:
 
-```bash
+```powershell
 python run.py
 ```
 
-O sistema será iniciado localmente em:
+O sistema será iniciado em:
 
 ```text
 http://127.0.0.1:5000
@@ -298,265 +217,64 @@ http://127.0.0.1:5000
 
 O navegador padrão é aberto automaticamente.
 
----
+## Persistência local
 
-## 📦 Distribuição para Windows
+Durante o desenvolvimento, o banco SQLite utiliza:
 
-A aplicação pode ser empacotada como executável utilizando **PyInstaller**.
+```text
+instance/braga_budget.sqlite
+```
 
-A distribuição final é preparada através do **Inno Setup**, permitindo instalação tradicional no Windows.
+Na aplicação instalada no Windows:
 
-O banco de dados do usuário não fica armazenado dentro da pasta do programa.
+```text
+%LOCALAPPDATA%\BragaBudget\braga_budget.sqlite
+```
 
----
+O banco fica separado dos arquivos do programa, permitindo atualizar ou reinstalar a aplicação sem depender do banco dentro do diretório de instalação.
 
-## Roadmap
+## Testes e qualidade
 
-O desenvolvimento do Braga Budget está organizado em etapas progressivas. A prioridade é estabilizar cada fase antes de avançar para a próxima, mantendo o projeto utilizável durante toda a evolução.
+A versão atual foi validada durante o desenvolvimento e também em uso real.
 
-### Etapa 1 - v1.0 local
+Entre as validações realizadas estão:
 
-Primeira versão funcional preparada para uso real em ambiente Windows.
+- cálculos de área e valores;
+- mão de obra individual;
+- distribuição proporcional do valor final;
+- persistência do banco local;
+- emissão de orçamentos;
+- geração de PDF;
+- exportação PNG;
+- executável Windows;
+- instalação e execução em outro computador.
 
-- [x] Gestão de clientes
-- [x] Gestão de componentes
-- [x] Criação de orçamentos
-- [x] Múltiplos serviços por orçamento
-- [x] Cálculo automático de vidro
-- [x] Componentes por item
-- [x] Mão de obra individual
-- [x] Ajustes comerciais
-- [x] Distribuição proporcional do valor final
-- [x] Emissão de orçamento
-- [x] Controle de status
-- [x] PDF comercial
-- [x] Exportação PNG
-- [x] Banco SQLite persistente
-- [x] Executável Windows
-- [x] Instalador Windows
+O desenvolvimento utiliza Git com commits incrementais e versionamento do código-fonte no GitHub.
 
-### Etapa 2 - Validação em uso real
+## Segurança e privacidade
 
-Após a entrega da v1.0, a aplicação entra em um período de utilização real antes das mudanças estruturais.
+- bancos SQLite locais não são versionados;
+- arquivos de build e instalação não fazem parte do repositório;
+- dados pessoais reais não devem ser incluídos em exemplos públicos;
+- screenshots de portfólio devem utilizar dados fictícios ou anonimizados;
+- a versão atual opera localmente e não expõe diretamente a aplicação à internet.
 
-- [ ] Utilizar o sistema no fluxo real de trabalho
-- [ ] Registrar bugs encontrados
-- [ ] Identificar dificuldades de usabilidade
-- [ ] Coletar sugestões de melhoria
-- [ ] Validar cálculos com orçamentos reais
-- [ ] Validar emissão, PDF e PNG
-- [ ] Organizar e priorizar o feedback recebido
+## Status
 
-**Janela inicial prevista:** aproximadamente 1 semana de uso real, ajustável conforme o volume de utilização.
+A **v1.0 local está funcional, instalada e validada em uso real**.
 
-### Etapa 3 - Estabilização da v1.0
+O projeto permanece em desenvolvimento ativo e continuará evoluindo conforme novas necessidades forem identificadas.
 
-- [ ] Corrigir bugs identificados
-- [ ] Refinar pontos de UX
-- [ ] Revisar validações
-- [ ] Revisar mensagens de erro
-- [ ] Validar persistência dos dados
-- [ ] Validar novamente PDF e PNG
-- [ ] Criar versão estável
-- [ ] Criar tag/release `v1.0.0` no GitHub
-
-### Etapa 4 - Testes automatizados
-
-Ampliar a segurança das futuras mudanças por meio de testes automatizados.
-
-- [ ] Testar cálculos de vidro
-- [ ] Testar componentes
-- [ ] Testar mão de obra
-- [ ] Testar adicionais e descontos
-- [ ] Testar distribuição proporcional do valor final
-- [ ] Testar emissão de orçamento
-- [ ] Testar regras de status
-- [ ] Criar testes das principais rotas
-- [ ] Criar testes de integração com o banco de dados
-
-### Etapa 5 - Preparação para produção
-
-Antes de expor a aplicação à internet:
-
-- [ ] Separar configurações de desenvolvimento e produção
-- [ ] Adotar variáveis de ambiente
-- [ ] Manter informações sensíveis fora do código
-- [ ] Implementar tratamento adequado de erros
-- [ ] Implementar logs
-- [ ] Revisar validação de entradas
-- [ ] Adicionar proteção CSRF
-- [ ] Revisar sessões e cookies
-- [ ] Definir estratégia de backup
-- [ ] Preparar servidor adequado para Flask em produção
-- [ ] Realizar revisão geral de segurança
-
-### Etapa 6 - Migração para PostgreSQL
-
-- [ ] Configurar PostgreSQL no ambiente de desenvolvimento
-- [ ] Adaptar a camada de acesso aos dados
-- [ ] Revisar consultas específicas do SQLite
-- [ ] Testar todas as operações utilizando PostgreSQL
-- [ ] Criar processo de migração do banco atual
-- [ ] Migrar clientes, componentes e orçamentos
-- [ ] Validar integridade dos dados após a migração
-
-### Etapa 7 - Infraestrutura em nuvem
-
-- [ ] Escolher o provedor de hospedagem
-- [ ] Provisionar PostgreSQL em nuvem
-- [ ] Hospedar o backend Flask
-- [ ] Configurar variáveis de ambiente
-- [ ] Configurar HTTPS
-- [ ] Configurar logs de produção
-- [ ] Configurar backups
-- [ ] Testar acesso externo
-- [ ] Validar estabilidade
-- [ ] Migrar os dados reais da versão local
-
-### Etapa 8 - Autenticação e controle de acesso
-
-- [ ] Criar estrutura de usuários
-- [ ] Implementar armazenamento seguro de senhas
-- [ ] Implementar login e logout
-- [ ] Proteger rotas autenticadas
-- [ ] Implementar controle de sessão
-- [ ] Implementar autorização
-- [ ] Revisar segurança dos cookies
-- [ ] Criar fluxo de alteração de senha
-
-### Etapa 9 - API
-
-- [ ] Definir a arquitetura da API
-- [ ] Criar endpoints de clientes
-- [ ] Criar endpoints de componentes
-- [ ] Criar endpoints de orçamentos
-- [ ] Criar endpoints de itens
-- [ ] Padronizar respostas JSON
-- [ ] Utilizar corretamente códigos HTTP
-- [ ] Padronizar respostas de erro
-- [ ] Integrar autenticação
-- [ ] Definir versionamento da API
-
-Exemplos planejados:
-
-    GET    /api/clients
-    POST   /api/clients
-    GET    /api/quotes
-    POST   /api/quotes
-    GET    /api/quotes/{id}
-    PUT    /api/quotes/{id}
-
-### Etapa 10 - Documentação da API
-
-- [ ] Documentar endpoints
-- [ ] Documentar parâmetros
-- [ ] Documentar requests e responses
-- [ ] Documentar códigos de erro
-- [ ] Documentar autenticação
-- [ ] Adotar OpenAPI / Swagger
-- [ ] Manter a documentação sincronizada com a implementação
-
-### Etapa 11 - Evolução arquitetural
-
-Objetivos:
-
-- [ ] Separar regras de negócio das rotas
-- [ ] Criar camada de serviços
-- [ ] Criar camada de acesso a dados
-- [ ] Reutilizar regras entre Web e API
-- [ ] Reduzir acoplamento
-- [ ] Facilitar testes e manutenção
-
-Estrutura planejada:
-
-    app/
-    |-- api/
-    |-- models/
-    |-- repositories/
-    |-- routes/
-    |-- services/
-    |-- static/
-    `-- templates/
-
-### Etapa 12 - Braga Budget v2.0 Android
-
-- [ ] Definir arquitetura do aplicativo Android
-- [ ] Implementar autenticação
-- [ ] Consultar clientes
-- [ ] Cadastrar clientes
-- [ ] Criar orçamentos
-- [ ] Editar orçamentos
-- [ ] Consultar histórico
-- [ ] Consumir a API central
-- [ ] Compartilhar PDF e PNG
-- [ ] Sincronizar dados entre Web e Android
-- [ ] Tratar indisponibilidade de conexão
-- [ ] Preparar distribuição do aplicativo
-
-Arquitetura alvo:
-
-    Web --------+
-                |
-                +--> Flask / API --> PostgreSQL
-                |
-    Android ----+
-
----
-
-## Screenshots
-
-### Tela inicial
-
-![Tela inicial do Braga Budget](docs/screenshots/01-home.png)
-
-### Gerenciamento de clientes
-
-![Gerenciamento de clientes](docs/screenshots/02-clients.png)
-
-### Detalhe do orçamento
-
-![Detalhe do orçamento](docs/screenshots/03-quote-detail.png)
-
-### Orçamento comercial
-
-![Orçamento comercial](docs/screenshots/04-quote-pdf.png)
-
----
-
-## 🔐 Privacidade e dados
-
-Este é um repositório público.
-
-Dados pessoais, informações comerciais e registros reais utilizados durante a operação da aplicação **não devem ser armazenados no repositório**.
-
-Screenshots e exemplos destinados à documentação ou portfólio devem utilizar dados fictícios ou anonimizados.
-
-Arquivos locais de banco de dados também não fazem parte do versionamento.
-
----
-
-## 👨‍💻 Autor
+## Autor
 
 **Diogo Zarpelão**
 
-Desenvolvimento, arquitetura, interface, regras de aplicação, banco de dados, geração de documentos e distribuição da aplicação.
+Desenvolvimento full stack, arquitetura da aplicação, regras de negócio, banco de dados, interface, geração de documentos, distribuição para Windows e documentação técnica.
 
 GitHub: [@diogozarpelo](https://github.com/diogozarpelo)
 
----
+## Uso
 
-## 📊 Status do projeto
+Este repositório é apresentado para fins de estudo, demonstração técnica e portfólio profissional.
 
-**Em desenvolvimento ativo.**
-
-A **v1.0 local** está funcional.
-
-O projeto continuará evoluindo com a migração da infraestrutura para nuvem, adoção de banco de dados centralizado e desenvolvimento de uma aplicação Android.
-
----
-
-## 📜 Licença
-
-O projeto ainda não possui uma licença pública definida.
-
-Todos os direitos reservados ao autor até que uma licença seja adicionada ao repositório.
+Todos os direitos reservados.
