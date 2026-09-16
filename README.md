@@ -147,6 +147,7 @@ Componentes, mão de obra, descontos, adicionais e demais informações utilizad
 | Banco de dados | SQLite |
 | PDF | ReportLab |
 | Imagens | PyMuPDF, Pillow |
+| Testes | pytest 9.1.1 |
 | Executável | PyInstaller |
 | Instalador | Inno Setup |
 | Versionamento | Git, GitHub |
@@ -158,24 +159,46 @@ Componentes, mão de obra, descontos, adicionais e demais informações utilizad
 braga-budget/
 |
 |-- app/
-|   |-- static/
-|   |   |-- css/
-|   |   |-- icons/
-|   |   |-- images/
-|   |   `-- js/
+|   |-- services/
+|   |   |-- pricing.py
+|   |   `-- quote_export.py
 |   |
+|   |-- utils/
+|   |   |-- pagination.py
+|   |   |-- parsing.py
+|   |   |-- search.py
+|   |   `-- text.py
+|   |
+|   |-- views/
+|   |   |-- clients.py
+|   |   |-- components.py
+|   |   |-- home.py
+|   |   |-- quote_items.py
+|   |   |-- quote_workflow.py
+|   |   |-- quotes.py
+|   |   `-- settings.py
+|   |
+|   |-- static/
 |   |-- templates/
 |   |-- __init__.py
 |   |-- db.py
 |   |-- routes.py
-|   `-- schema.sql
+|   |-- schema.sql
+|   `-- web.py
 |
 |-- docs/
-|   `-- screenshots/
+|   |-- screenshots/
+|   |-- index.html
+|   `-- styles.css
 |
 |-- tests/
+|   |-- test_pricing.py
+|   |-- test_routes.py
+|   `-- test_utils.py
+|
 |-- BragaBudget.iss
 |-- requirements.txt
+|-- requirements-dev.txt
 |-- run.py
 `-- README.md
 ```
@@ -235,19 +258,32 @@ O banco fica separado dos arquivos do programa, permitindo atualizar ou reinstal
 
 ## Testes e qualidade
 
-A versão atual foi validada durante o desenvolvimento e também em uso real.
+A aplicação possui uma suíte automatizada com **19 testes**, cobrindo regras de precificação, utilitários, registro de rotas e integridade dos principais endpoints.
 
-Entre as validações realizadas estão:
+Para instalar as dependências de desenvolvimento:
+
+```powershell
+pip install -r requirements-dev.txt
+```
+
+Para executar os testes:
+
+```powershell
+python -m pytest -q
+```
+
+A versão atual também foi validada durante o desenvolvimento e em uso real, incluindo:
 
 - cálculos de área e valores;
 - mão de obra individual;
 - distribuição proporcional do valor final;
 - persistência do banco local;
 - emissão de orçamentos;
-- geração de PDF;
-- exportação PNG;
+- geração de PDF e PNG;
 - executável Windows;
 - instalação e execução em outro computador.
+
+A arquitetura foi refatorada para separar rotas, regras de negócio, serviços e utilitários, reduzindo o acoplamento e facilitando manutenção e evolução do projeto.
 
 O desenvolvimento utiliza Git com commits incrementais e versionamento do código-fonte no GitHub.
 
@@ -263,7 +299,9 @@ O desenvolvimento utiliza Git com commits incrementais e versionamento do códig
 
 A **v1.0 local está funcional, instalada e validada em uso real**.
 
-O projeto permanece em desenvolvimento ativo e continuará evoluindo conforme novas necessidades forem identificadas.
+A aplicação passou por uma etapa dedicada de **refatoração e otimização**, com modularização da camada web, separação de serviços e utilitários, atualização da exportação com PyMuPDF e criação de testes automatizados.
+
+O projeto continuará evoluindo conforme novas necessidades forem identificadas no uso real.
 
 ## Autor
 
