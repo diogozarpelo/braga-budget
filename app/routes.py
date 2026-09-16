@@ -10,6 +10,8 @@ from app.utils.pagination import get_pagination
 from app.web import main
 from app.views import clients as _clients_routes
 from app.views import components as _components_routes
+from app.views import home as _home_routes
+from app.views import settings as _settings_routes
 from app.services.quote_export import (
     build_quote_pdf,
     build_quote_png,
@@ -41,29 +43,6 @@ ISSUED_QUOTES_PER_PAGE = 15
 
 
 
-@main.get("/")
-def index():
-    db = get_db()
-    recent_quotes = db.execute(
-        """
-        SELECT
-            quotes.id,
-            quotes.quote_number,
-            quotes.status,
-            quotes.issued_at,
-            clients.name AS client_name
-        FROM quotes
-        JOIN clients ON clients.id = quotes.client_id
-        WHERE quotes.status != 'draft'
-        ORDER BY quotes.issued_at DESC, quotes.id DESC
-        LIMIT 5
-        """
-    ).fetchall()
-
-    return render_template(
-        "index.html",
-        recent_quotes=recent_quotes,
-    )
 
 
 
@@ -1796,96 +1775,5 @@ def edit_quote_final_total(quote_id):
         quote=quote,
         calculated_total_cents=calculated_total_cents,
         current_total_for_input=current_total_for_input,
-        error=error,
-    )
-
-
-
-@main.route(
-    "/configuracoes",
-    methods=("GET", "POST"),
-)
-def settings():
-    db = get_db()
-    current_settings = db.execute(
-        """
-        SELECT *
-        FROM settings
-        WHERE id = 1
-        """
-    ).fetchone()
-
-    if current_settings is None:
-        abort(404)
-
-    error = None
-
-    if request.method == "POST":
-        business_name = request.form.get(
-            "business_name",
-            "",
-        ).strip()
-        phone = request.form.get("phone", "").strip()
-        cnpj = request.form.get("cnpj", "").strip()
-        warranty_text = request.form.get(
-            "warranty_text",
-            "",
-        ).strip()
-
-        try:
-            default_validity_days = int(
-                request.form.get(
-                    "default_validity_days",
-                    "",
-                )
-            )
-            default_execution_days = int(
-                request.form.get(
-                    "default_execution_days",
-                    "",
-                )
-            )
-        except ValueError:
-            error = "Preencha corretamente os prazos padrão."
-
-        if error is None and not business_name:
-            error = "Informe o nome da vidraçaria."
-        elif error is None and default_validity_days <= 0:
-            error = "A validade padrão deve ser maior que zero."
-        elif error is None and default_execution_days <= 0:
-            error = "O prazo de execução padrão deve ser maior que zero."
-
-        if error is None:
-            db.execute(
-                """
-                UPDATE settings
-                SET
-                    business_name = ?,
-                    phone = ?,
-                    cnpj = ?,
-                    default_validity_days = ?,
-                    default_execution_days = ?,
-                    warranty_text = ?,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = 1
-                """,
-                (
-                    business_name,
-                    phone,
-                    cnpj,
-                    default_validity_days,
-                    default_execution_days,
-                    warranty_text,
-                ),
-            )
-            db.commit()
-
-            return redirect(
-                url_for("main.settings", saved=1)
-            )
-
-    return render_template(
-        "settings.html",
-        settings=current_settings,
         error=error,
     )
