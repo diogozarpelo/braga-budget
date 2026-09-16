@@ -1,4 +1,4 @@
-import fitz
+import pymupdf
 from PIL import Image as PILImage
 from html import escape
 from io import BytesIO
@@ -600,7 +600,7 @@ def build_quote_pdf(
 
 
 def build_quote_png(pdf_bytes):
-    pdf_document = fitz.open(
+    pdf_document = pymupdf.open(
         stream=pdf_bytes,
         filetype="pdf",
     )
@@ -608,7 +608,7 @@ def build_quote_png(pdf_bytes):
     rendered_pages = []
 
     try:
-        matrix = fitz.Matrix(2, 2)
+        matrix = pymupdf.Matrix(2, 2)
 
         for page in pdf_document:
             pixmap = page.get_pixmap(
