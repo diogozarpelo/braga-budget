@@ -8,6 +8,7 @@ from flask import (
 
 from app.db import get_db
 from app.utils.pagination import get_pagination
+from app.utils.search import CLIENT_PHONE_DIGITS_SQL
 from app.utils.text import (
     escape_like,
     normalize_comparison_text,
@@ -18,29 +19,6 @@ from app.web import main
 
 CLIENTS_PER_PAGE = 15
 
-CLIENT_PHONE_DIGITS_SQL = """
-    REPLACE(
-        REPLACE(
-            REPLACE(
-                REPLACE(
-                    REPLACE(
-                        REPLACE(clients.phone, '(', ''),
-                        ')',
-                        ''
-                    ),
-                    '-',
-                    ''
-                ),
-                ' ',
-                ''
-            ),
-            '.',
-            ''
-        ),
-        '+',
-        ''
-    )
-"""
 
 
 def find_duplicate_client(db, name, phone, address, exclude_client_id=None):
